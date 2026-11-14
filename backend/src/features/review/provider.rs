@@ -14,3 +14,6 @@ mod tests;
 
 #[cfg(test)]
 mod regression_test_contracts;
+
+mod usage;
+pub(crate) use usage::input_token_usage;

@@ -167,6 +167,9 @@ pub(super) fn configure(
 }
 
 pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> Result<(), String> {
+    if state.finalizing && call.name != "submit_review" {
+        return Err("The remaining review budget is reserved for submit_review".into());
+    }
     if let Some(id) = state.reply_discussion_id.as_deref() {
         if !matches!(
             call.name.as_str(),

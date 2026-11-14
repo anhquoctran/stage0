@@ -108,7 +108,7 @@ it('uses the real keyboard picker to insert and preview a persisted MR link that
     render(<Editor />);
     expect(f.graph).not.toHaveBeenCalled();
     const input = screen.getByRole('combobox');
-    await user.type(input, '@Related');
+    await user.type(input, '!mr-b');
     expect(
         await screen.findByRole('option', { name: /Related safety fix/ }),
     ).toBeVisible();
@@ -124,14 +124,14 @@ it('uses the real keyboard picker to insert and preview a persisted MR link that
     await user.click(screen.getByRole('link', { name: /Related safety fix/ }));
     expect(f.mr.switchSession).toHaveBeenCalledWith('mr-b');
     expect(f.mr.setActiveMrTab).toHaveBeenCalledWith('overview');
-    expect(f.graph).toHaveBeenCalledTimes(1);
+    expect(f.graph).not.toHaveBeenCalled();
 });
 
-it('searches recent history by subject and opens the full SHA from a preview; escaping the popup leaves text intact', async () => {
+it('searches recent history by digest and opens the full SHA from a preview; escaping the popup leaves text intact', async () => {
     const user = userEvent.setup();
     render(<Editor />);
     const input = screen.getByRole('combobox');
-    await user.type(input, '@historical');
+    await user.type(input, '#bbbbbbb');
     await screen.findByRole('option', { name: /historical repair/ });
     await user.keyboard('{Tab}');
     expect(screen.getByTestId('source')).toHaveTextContent(
@@ -147,10 +147,11 @@ it('searches recent history by subject and opens the full SHA from a preview; es
     await user.click(screen.getByRole('button', { name: 'Close commit' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Write' }));
-    await user.type(screen.getByRole('combobox'), '@MR');
+    await user.type(screen.getByRole('combobox'), '@Security');
+    expect(await screen.findByRole('option', { name: /Security Bot/ })).toBeVisible();
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-    expect(screen.getByTestId('source')).toHaveTextContent('@MR');
+    expect(screen.getByTestId('source')).toHaveTextContent('@Security');
 });
 
 it('gives feedback for deleted/foreign MRs, intercepts entity links without invoking an outer discussion handler', async () => {
@@ -185,7 +186,7 @@ it('discards a late history response after changing repository and prevents an o
     );
     const user = userEvent.setup(),
         view = render(<Editor />);
-    await user.type(screen.getByRole('combobox'), '@');
+    await user.type(screen.getByRole('combobox'), '#');
     await waitFor(() => expect(f.graph).toHaveBeenCalledTimes(1));
     f.git.currentRepo = { id: 'repo-b', local_path: '/repo-b' };
     const next = { ...session, repoId: 'repo-b', id: 'next', commits: [] };
@@ -216,13 +217,13 @@ it('keeps known references usable when history fails and provides an explicit re
     const user = userEvent.setup();
     render(<Editor />);
     fireEvent.change(screen.getByRole('combobox'), {
-        target: { value: '@', selectionStart: 1 },
+        target: { value: '#', selectionStart: 1 },
     });
     expect(
         await screen.findByText(/Commit history could not be loaded/),
     ).toBeVisible();
     expect(
-        screen.getByRole('option', { name: /Related safety fix/ }),
+        screen.getByRole('option', { name: /fix: original/ }),
     ).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Try Again' }));
     await waitFor(() => expect(f.graph).toHaveBeenCalledTimes(2));
@@ -239,7 +240,7 @@ it('resolves an unambiguous SHA outside the recent history window and persists i
     f.message.mockResolvedValue('fix: older security repair\n\nDetails');
     const user = userEvent.setup();
     render(<Editor />);
-    await user.type(screen.getByRole('combobox'), '@ccccccc');
+    await user.type(screen.getByRole('combobox'), '#ccccccc');
     await screen.findByRole('option', { name: /older security repair/ });
     expect(f.resolveSha).toHaveBeenCalledWith({
         repoPath: '/repo-a',
@@ -256,7 +257,7 @@ it('cannot publish a late SHA lookup into another repository or query', async ()
     f.resolveSha.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
     const user = userEvent.setup();
     const view = render(<Editor />);
-    await user.type(screen.getByRole('combobox'), '@ddddddd');
+    await user.type(screen.getByRole('combobox'), '#ddddddd');
     await waitFor(() => expect(f.resolveSha).toHaveBeenCalledTimes(1));
     f.git.currentRepo = { id: 'repo-b', local_path: '/repo-b' };
     view.rerender(<Editor item={{ ...session, id: 'next', repoId: 'repo-b', commits: [] }} />);
@@ -328,4 +329,59 @@ it('cancels an in-flight hash lookup when switching from # to ! with the same qu
     await act(async () => { finish('d'.repeat(40)); });
     expect(f.message).not.toHaveBeenCalled();
     expect(screen.getAllByRole('option')).toHaveLength(1);
+});
+
+
+it('uses @ only for people or bots without starting commit history or digest lookups', async () => {
+    const user = userEvent.setup();
+    render(<Editor />);
+    const input = screen.getByRole('combobox');
+    await user.type(input, '@');
+    const options = await screen.findAllByRole('option');
+    expect(options).toHaveLength(1);
+    expect(options[0]).toHaveTextContent('Security Bot');
+    expect(screen.queryByRole('option', { name: /Related safety fix|fix: original|historical repair/ })).not.toBeInTheDocument();
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('source')).toHaveTextContent('[@Security Bot](#mr-mention/reviewer/bot)');
+    await user.clear(input);
+    await user.type(input, '@aaaaaaa');
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    expect(screen.getByTestId('source')).toHaveTextContent('@aaaaaaa');
+    expect(f.graph).not.toHaveBeenCalled();
+    expect(f.resolveSha).not.toHaveBeenCalled();
+});
+
+it('cancels pending commit lookups after switching from # to @', async () => {
+    let finish!: (hash: string) => void;
+    f.resolveSha.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+    const user = userEvent.setup();
+    render(<Editor />);
+    const input = screen.getByRole('combobox');
+    await user.type(input, '#ddddddd');
+    await waitFor(() => expect(f.resolveSha).toHaveBeenCalledTimes(1));
+    await user.clear(input);
+    await user.type(input, '@ddddddd');
+    await act(async () => { finish('d'.repeat(40)); });
+    expect(f.message).not.toHaveBeenCalled();
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Commit history could not be loaded/)).not.toBeInTheDocument();
+    await user.clear(input);
+    await user.type(input, '@Security');
+    expect(await screen.findByRole('option', { name: /Security Bot/ })).toBeVisible();
+});
+
+
+it('hides an existing commit-history failure when switching to @people without retrying Git', async () => {
+    f.graph.mockRejectedValueOnce(new Error('History unavailable'));
+    const user = userEvent.setup();
+    render(<Editor />);
+    const input = screen.getByRole('combobox');
+    await user.type(input, '#');
+    expect(await screen.findByText(/Commit history could not be loaded/)).toBeVisible();
+    await user.clear(input);
+    await user.type(input, '@Security');
+    expect(await screen.findByRole('option', { name: /Security Bot/ })).toBeVisible();
+    expect(screen.queryByText(/Commit history could not be loaded/)).not.toBeInTheDocument();
+    expect(f.graph).toHaveBeenCalledTimes(1);
+    expect(f.resolveSha).not.toHaveBeenCalled();
 });

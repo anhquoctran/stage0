@@ -106,3 +106,6 @@ mod mention_reply_tests;
 mod policy;
 mod reply_ownership_tests;
 mod truncation;
+
+mod continuation_tests;
+mod discussion_batch_tests;

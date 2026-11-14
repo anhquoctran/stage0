@@ -3308,7 +3308,8 @@
       "interruptedByShutdown": "La aplicación se detuvo antes de que finalizara esta ejecución. Inicie una nueva revisión.",
       "tokenBudgetExceededDetails": "Stage0 detuvo la revisión: {{used}} / {{limit}} tokens acumulados de entrada y salida. Es un límite local por ejecución, no del contexto ni de la cuenta del proveedor. Divida la MR o reduzca el esfuerzo de razonamiento. La revisión está incompleta.",
       "requestBudgetExceeded": "Stage0 se detuvo antes del envío: {{used}} / {{limit}} bytes en una solicitud. Reduzca el contexto o divida la MR. La revisión está incompleta.",
-      "wireBudgetExceeded": "Stage0 se detuvo antes de la siguiente solicitud: {{used}} / {{limit}} bytes de transporte acumulados reservados, incluidos los reintentos. Es un límite local, no un error de tokens del proveedor. Divida la MR. La revisión está incompleta."
+      "wireBudgetExceeded": "Stage0 se detuvo antes de la siguiente solicitud: {{used}} / {{limit}} bytes de transporte acumulados reservados, incluidos los reintentos. Es un límite local, no un error de tokens del proveedor. Divida la MR. La revisión está incompleta.",
+      "tokenBudgetCannotContinue": "La revisión se detuvo antes de otra llamada a la API: {used}/{limit} tokens usados; la siguiente solicitud necesita unos {inputEstimate} tokens de entrada. No se envió otra solicitud. La revisión está incompleta."
     },
     "credentials": {
       "accountRequired": "Introduce un nombre de cuenta.",

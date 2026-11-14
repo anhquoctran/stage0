@@ -116,6 +116,7 @@ pub(super) async fn execute_with_adapter(
     let mut provider_retries = 0;
     let mut expanded_output = false;
     let mut budget_warned = false;
+    let mut request_budget = super::request_budget::RequestBudget::default();
     let mut state = ReviewToolState::new(config.generate_description);
     super::scope::configure(db, config, &mut state)?;
     let has_open_discussions = db
@@ -177,10 +178,21 @@ pub(super) async fn execute_with_adapter(
                 budget_warned = true;
             }
         }
-        let output_tokens = adapter
+        let requested_output = adapter
             .output_token_limit(expanded_output)
             .min(token_limit.saturating_sub(run.usage_tokens));
-        let body = adapter.payload(&system, &history, tools, output_tokens);
+        let (body, output_tokens) = request_budget.prepare(
+            db,
+            run,
+            adapter,
+            &system,
+            &mut history,
+            tools,
+            requested_output,
+            token_limit,
+            state.description_updated && !reply_only,
+        )?;
+        state.finalizing = request_budget.finalizing;
         let bytes = adapter.request_size(&body);
         // Stateless HTTP providers reserve their transport retry. Every ACP
         // continuation, including a delayed provider retry, is counted here.
@@ -227,6 +239,7 @@ pub(super) async fn execute_with_adapter(
                 return Err(error);
             }
         };
+        request_budget.observe(db, run, adapter, &response, adapter.request_size(&body))?;
         if let Some(failure) = adapter.response_failure(&response) {
             db.review_event(&run.id, "agent_failure", json!({
                 "turn":run.turns,"kind":failure.kind,"httpStatus":failure.http_status,"retryable":failure.retryable,
@@ -284,10 +297,11 @@ pub(super) async fn execute_with_adapter(
             let retry = !expanded_output
                 && run.turns < max_turns
                 && run.usage_tokens < token_limit
-                && adapter
-                    .output_token_limit(true)
-                    .min(token_limit - run.usage_tokens)
-                    > output_tokens;
+                && request_budget.output_limit(
+                    adapter.output_token_limit(true),
+                    token_limit - run.usage_tokens,
+                    bytes,
+                ) > output_tokens;
             db.review_event(
                 &run.id,
                 "model_output_truncated",

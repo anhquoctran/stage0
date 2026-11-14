@@ -3301,7 +3301,8 @@
       "interruptedByShutdown": "Ứng dụng đã dừng trước khi lần chạy này kết thúc. Vui lòng bắt đầu một đợt đánh giá mới.",
       "tokenBudgetExceededDetails": "Stage0 đã dừng review: tổng token đầu vào + đầu ra là {{used}} / {{limit}}. Đây là giới hạn nội bộ mỗi lượt, không phải cửa sổ context hay hạn mức tài khoản API. Hãy chia MR nhỏ hơn hoặc giảm mức suy luận của reviewer. Review chưa hoàn tất.",
       "requestBudgetExceeded": "Stage0 đã dừng trước khi gửi yêu cầu: {{used}} / {{limit}} byte trong một yêu cầu. Hãy giảm context review hoặc chia MR nhỏ hơn. Review chưa hoàn tất.",
-      "wireBudgetExceeded": "Stage0 đã dừng trước yêu cầu tiếp theo: {{used}} / {{limit}} byte truyền tải cộng dồn đã dự phòng, gồm phần dành cho thử lại. Đây là giới hạn nội bộ, không phải lỗi token từ nhà cung cấp. Hãy chia MR nhỏ hơn. Review chưa hoàn tất."
+      "wireBudgetExceeded": "Stage0 đã dừng trước yêu cầu tiếp theo: {{used}} / {{limit}} byte truyền tải cộng dồn đã dự phòng, gồm phần dành cho thử lại. Đây là giới hạn nội bộ, không phải lỗi token từ nhà cung cấp. Hãy chia MR nhỏ hơn. Review chưa hoàn tất.",
+      "tokenBudgetCannotContinue": "Review dừng trước khi gọi API thêm: đã dùng {used}/{limit} token; request tiếp theo cần khoảng {inputEstimate} token đầu vào. Không gửi thêm request. Review chưa hoàn tất."
     },
     "credentials": {
       "accountRequired": "Hãy nhập tên tài khoản.",
