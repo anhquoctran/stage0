@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "部分 AI 审查者未能完成：{{errors}}",
       "reviewerCouldNotStart": "无法启动 AI 审查者：{{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 审查者无法检查更新后的虚拟 MR：{{error}}"
+    },
+    "localContext": {
+      "title": "评审上下文本地缓存",
+      "description": "复用不可变源代码并减少同一评审中的重复上下文。保存设置后生效。",
+      "modelDescription": "可选语义搜索在本机运行。只需下载一次模型，源代码不会发送给嵌入服务。部分索引不能替代必需的差异覆盖。",
+      "ready": "已安装本地模型",
+      "notInstalled": "精确缓存可用；尚未安装语义模型",
+      "download": "下载本地模型（{{size}} MiB）",
+      "installing": "正在下载本地模型…",
+      "clear": "清除所有仓库缓存",
+      "size": "缓存大小：{{size}} MiB",
+      "installFailed": "无法安装本地模型。请检查网络连接和磁盘空间。",
+      "clearFailed": "无法清除上下文缓存。",
+      "repair": "检查／修复模型"
     }
   },
   "backend": {

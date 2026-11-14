@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "Một số reviewer AI không hoàn tất: {{errors}}",
       "reviewerCouldNotStart": "Không thể bắt đầu reviewer AI: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Reviewer AI không thể kiểm tra MR ảo đã cập nhật: {{error}}"
+    },
+    "localContext": {
+      "title": "Cache context review local",
+      "description": "Tái sử dụng source bất biến và tránh context lặp trong một lượt review. Có hiệu lực sau khi lưu cài đặt.",
+      "modelDescription": "Tìm kiếm ngữ nghĩa tuỳ chọn chạy trên thiết bị. Chỉ cần tải model một lần; source không gửi tới dịch vụ embedding. Index chưa đầy đủ và không thay thế coverage diff bắt buộc.",
+      "ready": "Đã cài model local",
+      "notInstalled": "Cache chính xác khả dụng; chưa cài model ngữ nghĩa",
+      "download": "Tải model local ({{size}} MiB)",
+      "installing": "Đang tải model local…",
+      "clear": "Xoá cache của tất cả repository",
+      "size": "Cache: {{size}} MiB",
+      "installFailed": "Không thể cài model local. Hãy kiểm tra kết nối và dung lượng đĩa.",
+      "clearFailed": "Không thể xoá cache context.",
+      "repair": "Kiểm tra / sửa model"
     }
   },
   "backend": {

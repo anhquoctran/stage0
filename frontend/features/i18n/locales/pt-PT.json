@@ -2784,6 +2784,20 @@
       "someReviewersCouldNotFinish": "Alguns revisores de IA não conseguiram concluir: {{errors}}",
       "reviewerCouldNotStart": "Não foi possível iniciar o revisor de IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "O revisor de IA não conseguiu verificar a MR virtual atualizada: {{error}}"
+    },
+    "localContext": {
+      "title": "Cache local do contexto de revisão",
+      "description": "Reutilize código imutável e evite contexto repetido durante a revisão. Aplicado após guardar.",
+      "modelDescription": "A pesquisa semântica opcional é executada neste dispositivo. Transfira o modelo uma vez; o código não é enviado a serviços de embeddings. O índice parcial não substitui a cobertura obrigatória dos diffs.",
+      "ready": "Modelo local instalado",
+      "notInstalled": "Cache exata disponível; modelo semântico ausente",
+      "download": "Transferir modelo local ({{size}} MiB)",
+      "installing": "A transferir modelo local…",
+      "clear": "Limpar as caches de todos os repositórios",
+      "size": "Tamanho da cache: {{size}} MiB",
+      "installFailed": "Não foi possível instalar o modelo local. Verifique a ligação e o espaço em disco.",
+      "clearFailed": "Não foi possível limpar a cache de contexto.",
+      "repair": "Verificar / reparar modelo"
     }
   },
   "backend": {

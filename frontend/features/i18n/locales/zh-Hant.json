@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "部分 AI 審查者未能完成：{{errors}}",
       "reviewerCouldNotStart": "無法啟動 AI 審查者：{{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 審查者無法檢查更新後的虛擬 MR：{{error}}"
+    },
+    "localContext": {
+      "title": "審查上下文本機快取",
+      "description": "重用不可變原始碼並減少同次審查中的重複上下文。儲存設定後生效。",
+      "modelDescription": "選用的語意搜尋在本機執行。只需下載一次模型，原始碼不會傳送至嵌入服務。部分索引不能取代必要的差異覆蓋。",
+      "ready": "已安裝本機模型",
+      "notInstalled": "精確快取可用；尚未安裝語意模型",
+      "download": "下載本機模型（{{size}} MiB）",
+      "installing": "正在下載本機模型…",
+      "clear": "清除所有儲存庫快取",
+      "size": "快取大小：{{size}} MiB",
+      "installFailed": "無法安裝本機模型。請檢查網路連線和磁碟空間。",
+      "clearFailed": "無法清除上下文快取。",
+      "repair": "檢查／修復模型"
     }
   },
   "backend": {

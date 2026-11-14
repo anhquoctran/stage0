@@ -93,12 +93,14 @@ fn config(url: String) -> ReviewRequest {
 
 mod acp;
 mod action_errors;
+mod compact_prompt_tests;
 mod coverage;
 mod diff_batches;
 mod discussion_fixture;
 mod discussion_security;
 mod http;
 mod injection;
+mod local_context_tests;
 mod mention_reply_tests;
 mod policy;
 mod reply_ownership_tests;

@@ -3,11 +3,15 @@ import type { AcpReviewConfigOverrides } from '../../../ai/types/AcpReviewConfig
 import type { AiProviderId } from '../../../ai/types/AiProviderId';
 import type { AiReasoningEffort } from '../../../ai/types/AiReasoningEffort';
 import type { BotCategory } from '../../../virtual-mr/types/BotCategory';
+import type { LocalContextCacheStatus } from '../../types/LocalContextCacheStatus';
 import type { ReviewRun } from '../../types/ReviewRun';
 import type { ReviewRunDetail } from '../../types/ReviewRunDetail';
 
 /** Feature-owned backend contract. Inputs retain the existing wire field names. */
 export interface ReviewService {
+  getReviewContextCache(input: Record<string, never>): Promise<LocalContextCacheStatus>;
+  clearReviewContextCache(input: Record<string, never>): Promise<LocalContextCacheStatus>;
+  installReviewContextModel(input: Record<string, never>): Promise<LocalContextCacheStatus>;
   cancelAiReview(input: {
     runId: string;
   }): Promise<unknown>;

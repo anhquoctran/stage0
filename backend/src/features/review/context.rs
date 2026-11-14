@@ -4,6 +4,7 @@ mod diff;
 mod diff_batch;
 mod discussion_snippet;
 mod evidence;
+mod local_context;
 mod snapshot;
 mod tools;
 
@@ -27,6 +28,9 @@ pub struct ReviewContext {
     diff_offsets: HashMap<String, usize>,
     diff_cache: HashMap<String, Arc<diff::SnapshotDiff>>,
     diff_cache_bytes: usize,
+    local_cache: Option<super::local_context::CacheSession>,
+    delivered_context: BTreeSet<String>,
+    allow_context_references: bool,
 }
 
 impl ReviewContext {
@@ -61,6 +65,9 @@ impl ReviewContext {
             diff_offsets: HashMap::new(),
             diff_cache: HashMap::new(),
             diff_cache_bytes: 0,
+            local_cache: None,
+            delivered_context: BTreeSet::new(),
+            allow_context_references: true,
         }
     }
 }
@@ -69,3 +76,6 @@ impl ReviewContext {
 mod encoding_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod local_context_tests;

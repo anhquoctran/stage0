@@ -2784,6 +2784,20 @@
       "someReviewersCouldNotFinish": "Alcuni revisori IA non sono riusciti a completare: {{errors}}",
       "reviewerCouldNotStart": "Impossibile avviare il revisore IA: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "Il revisore IA non è riuscito a controllare la MR virtuale aggiornata: {{error}}"
+    },
+    "localContext": {
+      "title": "Cache locale del contesto di revisione",
+      "description": "Riutilizza il codice immutabile ed evita contesto ripetuto nella revisione. Si applica dopo il salvataggio.",
+      "modelDescription": "La ricerca semantica facoltativa viene eseguita sul dispositivo. Scarica il modello una volta; il codice non viene inviato a servizi di embedding. L’indice parziale non sostituisce la copertura obbligatoria dei diff.",
+      "ready": "Modello locale installato",
+      "notInstalled": "Cache esatta disponibile; modello semantico assente",
+      "download": "Scarica modello locale ({{size}} MiB)",
+      "installing": "Download del modello locale…",
+      "clear": "Svuota le cache di tutti i repository",
+      "size": "Dimensione cache: {{size}} MiB",
+      "installFailed": "Impossibile installare il modello locale. Controlla connessione e spazio su disco.",
+      "clearFailed": "Impossibile svuotare la cache del contesto.",
+      "repair": "Verifica / ripara modello"
     }
   },
   "backend": {

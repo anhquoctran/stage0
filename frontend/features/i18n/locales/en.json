@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "Some AI reviewers could not finish: {{errors}}",
       "reviewerCouldNotStart": "AI reviewer could not start: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI reviewer could not check the updated Virtual MR: {{error}}"
+    },
+    "localContext": {
+      "title": "Local review context cache",
+      "description": "Reuse immutable source locally and avoid repeated context within a review. Applies after saving settings.",
+      "modelDescription": "Optional semantic search runs on your device. Download the model once; source is not sent to an embedding service. The index is partial and never replaces required diff coverage.",
+      "ready": "Local model installed",
+      "notInstalled": "Exact cache available; semantic model not installed",
+      "download": "Download local model ({{size}} MiB)",
+      "installing": "Downloading local model…",
+      "clear": "Clear all repository caches",
+      "size": "Cache: {{size}} MiB",
+      "installFailed": "Could not install the local model. Check your connection and available disk space.",
+      "clearFailed": "Could not clear the context cache.",
+      "repair": "Check / repair model"
     }
   },
   "backend": {

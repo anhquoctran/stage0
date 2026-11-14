@@ -355,6 +355,58 @@
         "features::review::runtime::tests::mention_reply_tests::full_review_cannot_stage_or_publish_an_unmentioned_own_finding_reply",
         "features::review::runtime::tests::mention_reply_tests::deliberate_no_reply_checks_are_quiet_but_errors_still_notify"
       ]
+    },
+    {
+      "id": "local-review-context-storage",
+      "runner": "rust",
+      "path": "backend/src/features/review/local_context/storage_tests.rs",
+      "tests": [
+        "features::review::local_context::storage_tests::exact_cache_is_durable_versioned_and_rejects_corruption",
+        "features::review::local_context::storage_tests::vector_metadata_commit_atomically_and_search_is_snapshot_scoped",
+        "features::review::local_context::storage_tests::cache_clear_invalidates_stale_readers_and_queued_writes"
+      ]
+    },
+    {
+      "id": "local-review-context-authorization",
+      "runner": "rust",
+      "path": "backend/src/features/review/context/local_context_tests.rs",
+      "tests": [
+        "features::review::context::local_context_tests::persisted_source_does_not_transfer_coverage_and_evidence_bypasses_cache",
+        "features::review::context::local_context_tests::only_successfully_delivered_large_context_can_be_referenced",
+        "features::review::context::local_context_tests::disk_failure_and_missing_embedding_model_preserve_normal_source_reads",
+        "features::review::context::local_context_tests::rejected_output_is_not_deduplicated_on_a_later_successful_read",
+        "features::review::context::local_context_tests::concurrent_exact_misses_share_only_the_source_read_not_run_coverage",
+        "features::review::context::local_context_tests::uncertified_agent_history_retention_keeps_complete_tool_outputs"
+      ]
+    },
+    {
+      "id": "local-review-context-tool-loop",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/local_context_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::local_context_tests::native_tool_loop_reuses_delivered_context_without_reusing_a_verdict"
+      ]
+    },
+    {
+      "id": "compact-review-prompt",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/compact_prompt_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::compact_prompt_tests::compact_prompt_preserves_authority_scope_and_reduces_fixed_input"
+      ]
+    },
+    {
+      "id": "local-review-embedding-validation",
+      "runner": "rust",
+      "path": "backend/src/features/review/local_context/model_tests.rs",
+      "tests": [
+        "features::review::local_context::model_tests::embeddings_are_normalized_and_invalid_vectors_are_rejected"
+      ]
+    },
+    {
+      "id": "local-review-context-preferences",
+      "runner": "node",
+      "path": "scripts/local-review-context.test.mjs"
     }
   ]
 }
