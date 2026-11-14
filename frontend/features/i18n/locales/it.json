@@ -3308,7 +3308,8 @@
       "interruptedByShutdown": "L'applicazione si è interrotta prima del termine dell'esecuzione. Avvia una nuova revisione.",
       "tokenBudgetExceededDetails": "Stage0 ha interrotto la revisione: {{used}} / {{limit}} token cumulativi di input e output. È un limite locale per esecuzione, non del contesto o dell’account del fornitore. Suddividi la MR o riduci lo sforzo di ragionamento. La revisione è incompleta.",
       "requestBudgetExceeded": "Stage0 si è fermato prima dell’invio: {{used}} / {{limit}} byte in una richiesta. Riduci il contesto o suddividi la MR. La revisione è incompleta.",
-      "wireBudgetExceeded": "Stage0 si è fermato prima della prossima richiesta: {{used}} / {{limit}} byte di trasporto cumulativi riservati, inclusi i tentativi aggiuntivi. Limite locale, non errore di token del fornitore. Suddividi la MR. La revisione è incompleta."
+      "wireBudgetExceeded": "Stage0 si è fermato prima della prossima richiesta: {{used}} / {{limit}} byte di trasporto cumulativi riservati, inclusi i tentativi aggiuntivi. Limite locale, non errore di token del fornitore. Suddividi la MR. La revisione è incompleta.",
+      "tokenBudgetCannotContinue": "Revisione interrotta prima di un’altra chiamata API: {used}/{limit} token usati; la prossima richiesta richiede circa {inputEstimate} token di input. Nessuna richiesta aggiuntiva inviata. La revisione è incompleta."
     },
     "credentials": {
       "accountRequired": "Inserisci il nome dell’account.",

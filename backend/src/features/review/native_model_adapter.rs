@@ -39,6 +39,9 @@ impl ReviewModelAdapter for NativeModelAdapter {
             2048
         }
     }
+    fn input_token_usage(&self, response: &Value) -> Option<u64> {
+        super::provider::input_token_usage(&self.config.provider, response)
+    }
     fn truncated_output_usage(&self, response: &Value) -> Option<u64> {
         (self.config.provider == "deepseek" && response["choices"][0]["finish_reason"] == "length")
             .then(|| response["usage"]["total_tokens"].as_u64().unwrap_or(0))

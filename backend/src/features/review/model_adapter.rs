@@ -12,6 +12,12 @@ pub trait ReviewModelAdapter: Send + Sync {
         2048
     }
 
+    /// Observed input usage enables best-effort reservation for the next request.
+    /// None preserves accounting for adapters that cannot separate input/output.
+    fn input_token_usage(&self, _response: &Value) -> Option<u64> {
+        None
+    }
+
     /// A truncated response is discarded in full, including any partial calls.
     fn truncated_output_usage(&self, _response: &Value) -> Option<u64> {
         None

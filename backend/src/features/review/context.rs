@@ -34,6 +34,12 @@ pub struct ReviewContext {
 }
 
 impl ReviewContext {
+    pub(crate) fn external_output_budget(&self) -> usize {
+        (24 * 1024)
+            .min(self.max_bytes.saturating_sub(self.bytes))
+            .min(self.guards.get_policy().max_output_bytes)
+    }
+
     pub(crate) fn deliver_external(
         &mut self,
         name: &str,

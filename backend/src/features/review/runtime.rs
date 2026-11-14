@@ -10,6 +10,7 @@ mod engine;
 mod initial_context;
 mod prompt;
 mod reply_completion;
+mod request_budget;
 mod review_actions;
 mod scope;
 mod submission;

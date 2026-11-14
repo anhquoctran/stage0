@@ -417,6 +417,30 @@
       "id": "local-review-context-preferences",
       "runner": "node",
       "path": "scripts/local-review-context.test.mjs"
+    },
+    {
+      "id": "review-budget-continuation",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/continuation_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::continuation_tests::continuation_reserves_replayed_input_and_keeps_thinking_and_final_submission_guards",
+        "features::review::runtime::tests::continuation_tests::unaffordable_next_input_stops_before_another_api_call_without_claiming_an_overrun",
+        "features::review::runtime::tests::continuation_tests::native_provider_input_usage_is_optional_and_never_double_counts_cached_input",
+        "features::review::runtime::tests::continuation_tests::truncated_finalization_is_not_retried_when_input_reservation_cannot_expand_output",
+        "features::review::runtime::tests::continuation_tests::finalization_does_not_hide_a_required_description_update_or_relax_its_submission_gate",
+        "features::review::runtime::tests::continuation_tests::reply_only_budget_planning_keeps_reply_tools_instead_of_forcing_a_silent_completion"
+      ]
+    },
+    {
+      "id": "review-discussion-batches",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/discussion_batch_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::discussion_batch_tests::discussion_pagination_is_byte_bounded_contiguous_and_never_authorizes_truncated_or_rejected_context",
+        "features::review::runtime::tests::discussion_batch_tests::larger_discussion_batches_keep_reply_only_scope_and_deny_unmentioned_thread_ownership",
+        "features::review::runtime::tests::discussion_batch_tests::discussion_batches_fit_the_remaining_context_instead_of_failing_on_a_larger_default_page",
+        "features::review::runtime::tests::discussion_batch_tests::six_discussions_fit_one_bounded_page_and_a_ten_file_review_finishes_inside_budget"
+      ]
     }
   ]
 }
