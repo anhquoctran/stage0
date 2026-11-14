@@ -44,6 +44,10 @@ pub fn tools() -> Vec<Value> {
     definitions.into_iter().map(|(name,description,properties)| json!({"name":name,"description":description,"parameters":object(properties)})).collect()
 }
 
+pub(crate) fn related_context_tool() -> Value {
+    json!({"name":"search_related_context","description":"Find related context already indexed locally in this exact snapshot. Returns bounded immutable source hints; the index is incomplete and never replaces eligible diff coverage. Use literal search_code when no useful matches are found.","parameters":object(json!({"query":{"type":"string","minLength":3,"maxLength":512}}))})
+}
+
 fn finding_properties(side: &Value, line: &Value) -> Value {
     json!({
         "filePath":{"type":"string","minLength":1,"maxLength":1024},

@@ -47,7 +47,7 @@ pub(super) fn reviewer_role_prompt(role: Option<&str>) -> &'static str {
         .unwrap_or("You are Stage0's General Code Reviewer.")
 }
 
-fn output_language_instruction(language: &str) -> &'static str {
+pub(super) fn output_language_instruction(language: &str) -> &'static str {
     match language {
         "vi" => "Write all reviewer-authored natural-language text in Vietnamese. Keep code, diffs, paths, identifiers, quoted evidence, tool names, and protocol fields unchanged.",
         "hi" => "समीक्षक द्वारा लिखी गई सभी प्राकृतिक भाषा की सामग्री हिंदी में लिखें। कोड, डिफ़, पथ, पहचानकर्ता, उद्धृत साक्ष्य, टूल नाम और प्रोटोकॉल फ़ील्ड को अपरिवर्तित रखें।",

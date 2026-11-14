@@ -201,6 +201,9 @@ pub fn run() {
 
             let initial_repos = db.get_recent_repositories().unwrap_or_default();
             app.manage(db);
+            if let Ok(cache_dir) = handle.path().app_cache_dir() {
+                app.manage(features::review::local_context::LocalContextRuntime::new(cache_dir.join("review-context")));
+            }
             features::credentials::preference_snapshot::initialize(handle);
             features::preferences::recover_prepared_credentials(handle);
 
@@ -334,6 +337,9 @@ pub fn run() {
             commands::get_ai_review,
             commands::list_ai_reviews,
             commands::cancel_ai_review,
+            features::review::local_context::get_review_context_cache,
+            features::review::local_context::clear_review_context_cache,
+            features::review::local_context::install_review_context_model,
             commands::publish_ai_review,
             commands::fetch_ai_models,
             commands::get_available_sandboxes,

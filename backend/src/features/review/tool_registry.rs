@@ -35,6 +35,9 @@ impl ReviewToolRegistry {
         }
         registry
     }
+    pub(crate) fn enable_related_context(&mut self) {
+        self.native.push(schemas::related_context_tool());
+    }
     pub fn native() -> Self {
         Self::native_for_review(false)
     }

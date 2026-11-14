@@ -2,6 +2,7 @@
 mod action_dispatch;
 mod audit;
 mod budget;
+mod compact_prompt;
 pub(super) mod completion_notification;
 mod discussion_observation;
 mod discussions;
@@ -58,6 +59,12 @@ pub async fn run(
             100
         )
     ));
+    super::local_context::attach(
+        app.clone(),
+        Arc::clone(&context),
+        config.execution_mode != "acp",
+    )
+    .await;
     let outcome = tokio::select! {
         result=execute(&database,&config,&mut run,&context)=>result,
         _=wait_cancel(cancel)=>{
@@ -70,6 +77,13 @@ pub async fn run(
         },
     };
     run.finish(outcome);
+    if let Some(metrics) = context
+        .lock()
+        .ok()
+        .and_then(|ctx| ctx.local_context_metrics())
+    {
+        let _ = database.review_event(&run.id, "local_context_cache", metrics);
+    }
     super::debug_log::log(format_args!(
         "event=review_finished run={} status={} elapsed_ms={} turns={} tool_calls={} findings={} inspected_files={} context_bytes={} usage_tokens={} published={} error_class={}",
         super::debug_log::safe_label(&run.id, 80),

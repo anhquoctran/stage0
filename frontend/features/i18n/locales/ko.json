@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "일부 AI 리뷰어가 완료하지 못했습니다: {{errors}}",
       "reviewerCouldNotStart": "AI 리뷰어를 시작할 수 없습니다: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI 리뷰어가 업데이트된 가상 MR을 확인할 수 없습니다: {{error}}"
+    },
+    "localContext": {
+      "title": "리뷰 컨텍스트 로컬 캐시",
+      "description": "변경 불가능한 소스를 재사용하고 리뷰 내 중복 컨텍스트를 줄입니다. 저장 후 적용됩니다.",
+      "modelDescription": "선택적 의미 검색은 이 기기에서 실행됩니다. 모델을 한 번 다운로드하면 소스를 임베딩 서비스에 보내지 않습니다. 부분 인덱스는 필수 diff 검토를 대체하지 않습니다.",
+      "ready": "로컬 모델 설치됨",
+      "notInstalled": "정확 일치 캐시 사용 가능; 의미 검색 모델 미설치",
+      "download": "로컬 모델 다운로드 ({{size}} MiB)",
+      "installing": "로컬 모델 다운로드 중…",
+      "clear": "모든 저장소 캐시 지우기",
+      "size": "캐시 크기: {{size}} MiB",
+      "installFailed": "로컬 모델을 설치할 수 없습니다. 연결과 디스크 여유 공간을 확인하세요.",
+      "clearFailed": "컨텍스트 캐시를 지울 수 없습니다.",
+      "repair": "모델 확인 / 복구"
     }
   },
   "backend": {

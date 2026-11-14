@@ -55,7 +55,15 @@ pub(super) async fn execute_with_adapter(
             })?
             .max_bytes = 32 * 1024;
     }
-    let system = build_system_prompt(config);
+    let compact = context
+        .lock()
+        .map(|ctx| ctx.local_context_metrics().is_some())
+        .unwrap_or(false);
+    let system = if compact {
+        super::compact_prompt::build(config)
+    } else {
+        build_system_prompt(config)
+    };
     let (mr_title, target_branch, source_branch) = {
         let conn = db.conn();
         conn.query_row(
@@ -92,7 +100,15 @@ pub(super) async fn execute_with_adapter(
     if reply_only {
         initial["task"] = json!("Answer the latest eligible comment in the assigned discussion. This is not an MR review or approval.");
     }
-    let registry = ReviewToolRegistry::for_request(config);
+    let mut registry = ReviewToolRegistry::for_request(config);
+    if !reply_only
+        && context
+            .lock()
+            .map(|ctx| ctx.related_context_available())
+            .unwrap_or(false)
+    {
+        registry.enable_related_context();
+    }
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
     let mut recovered_missing_tool_call = false;

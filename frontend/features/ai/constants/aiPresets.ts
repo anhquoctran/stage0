@@ -171,6 +171,7 @@ export const DEFAULT_AI_CONFIG = {
   reviewerInstructions: '',
   streamResponse: true,
   enableCodeReviewAssist: true,
+  localReviewContext: false,
 };
 
 export const DEFAULT_MCP_SERVERS: McpServerConfig[] = [

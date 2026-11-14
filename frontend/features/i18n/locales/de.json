@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "Einige KI-Reviewer konnten nicht fertig werden: {{errors}}",
       "reviewerCouldNotStart": "KI-Reviewer konnte nicht gestartet werden: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "KI-Reviewer konnte die aktualisierte virtuelle MR nicht prüfen: {{error}}"
+    },
+    "localContext": {
+      "title": "Lokaler Review-Kontextcache",
+      "description": "Unveränderlichen Quelltext lokal wiederverwenden und Kontextwiederholungen vermeiden. Gilt nach dem Speichern.",
+      "modelDescription": "Die optionale semantische Suche läuft auf diesem Gerät. Das Modell einmal herunterladen; Quelltext wird an keinen Embedding-Dienst gesendet. Der Teilindex ersetzt keine erforderliche Diff-Abdeckung.",
+      "ready": "Lokales Modell installiert",
+      "notInstalled": "Exakter Cache verfügbar; semantisches Modell fehlt",
+      "download": "Lokales Modell laden ({{size}} MiB)",
+      "installing": "Lokales Modell wird geladen…",
+      "clear": "Alle Repository-Caches leeren",
+      "size": "Cachegröße: {{size}} MiB",
+      "installFailed": "Lokales Modell konnte nicht installiert werden. Verbindung und freien Speicher prüfen.",
+      "clearFailed": "Kontextcache konnte nicht geleert werden.",
+      "repair": "Modell prüfen / reparieren"
     }
   },
   "backend": {

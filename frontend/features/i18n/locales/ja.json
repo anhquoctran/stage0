@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "一部の AI レビュアーが完了できませんでした: {{errors}}",
       "reviewerCouldNotStart": "AI レビュアーを開始できませんでした: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI レビュアーが更新された Virtual MR を確認できませんでした: {{error}}"
+    },
+    "localContext": {
+      "title": "レビューコンテキストのローカルキャッシュ",
+      "description": "不変のソースを再利用し、レビュー内のコンテキスト重複を避けます。保存後に適用されます。",
+      "modelDescription": "任意の意味検索は端末上で動作します。モデルを一度ダウンロードすると、ソースを埋め込みサービスへ送信しません。部分的なインデックスは必須の差分確認を代替しません。",
+      "ready": "ローカルモデルをインストール済み",
+      "notInstalled": "完全一致キャッシュは利用可能です。意味検索モデルは未インストールです",
+      "download": "ローカルモデルをダウンロード（{{size}} MiB）",
+      "installing": "ローカルモデルをダウンロード中…",
+      "clear": "全リポジトリのキャッシュを消去",
+      "size": "キャッシュ容量：{{size}} MiB",
+      "installFailed": "ローカルモデルをインストールできません。接続と空き容量を確認してください。",
+      "clearFailed": "コンテキストキャッシュを消去できません。",
+      "repair": "モデルを確認・修復"
     }
   },
   "backend": {

@@ -2777,6 +2777,20 @@
       "someReviewersCouldNotFinish": "Some AI reviewers could not finish: {{errors}}",
       "reviewerCouldNotStart": "AI reviewer could not start: {{error}}",
       "reviewerCouldNotCheckUpdatedMr": "AI reviewer could not check the updated Virtual MR: {{error}}"
+    },
+    "localContext": {
+      "title": "स्थानीय समीक्षा संदर्भ कैश",
+      "description": "अपरिवर्तनीय स्रोत का पुनः उपयोग करें और समीक्षा में दोहराया संदर्भ घटाएँ। सहेजने के बाद लागू होता है।",
+      "modelDescription": "वैकल्पिक अर्थ आधारित खोज इस उपकरण पर चलती है। मॉडल एक बार डाउनलोड करें; स्रोत किसी एम्बेडिंग सेवा को नहीं भेजा जाता। आंशिक इंडेक्स आवश्यक diff कवरेज का विकल्प नहीं है।",
+      "ready": "स्थानीय मॉडल स्थापित है",
+      "notInstalled": "सटीक कैश उपलब्ध है; अर्थ आधारित मॉडल स्थापित नहीं है",
+      "download": "स्थानीय मॉडल डाउनलोड करें ({{size}} MiB)",
+      "installing": "स्थानीय मॉडल डाउनलोड हो रहा है…",
+      "clear": "सभी रिपॉजिटरी के कैश मिटाएँ",
+      "size": "कैश आकार: {{size}} MiB",
+      "installFailed": "स्थानीय मॉडल स्थापित नहीं हो सका। कनेक्शन और डिस्क स्थान जाँचें।",
+      "clearFailed": "संदर्भ कैश मिटाया नहीं जा सका।",
+      "repair": "मॉडल जाँचें / सुधारें"
     }
   },
   "backend": {

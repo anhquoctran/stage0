@@ -233,6 +233,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             validate_optional_string(config, "reviewerInstructions", "ai.aiConfig", 32_000, true)?;
             validate_optional_bool(config, "streamResponse", "ai.aiConfig")?;
             validate_optional_bool(config, "enableCodeReviewAssist", "ai.aiConfig")?;
+            validate_optional_bool(config, "localReviewContext", "ai.aiConfig")?;
         }
     }
     if let Some(servers) = ai.get("mcpServers") {
