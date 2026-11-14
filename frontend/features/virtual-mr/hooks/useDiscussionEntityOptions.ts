@@ -28,9 +28,9 @@ export function useDiscussionEntityOptions(session: VirtualMrSession) {
     } | null>(null);
     const requestHistory = useCallback(
         (query: string | null, trigger: '@' | '!' | '#' = '@') => {
-            const commitQuery = trigger === '!' ? null : query;
+            const commitQuery = trigger === '#' ? query : null;
             setSearch(commitQuery);
-            if (commitQuery !== null) setRequested(scope);
+            setRequested(commitQuery !== null ? scope : null);
         },
         [scope],
     );
@@ -101,7 +101,7 @@ export function useDiscussionEntityOptions(session: VirtualMrSession) {
     return {
         options,
         requestHistory,
-        historyUnavailable: failed === scope,
+        historyUnavailable: search !== null && failed === scope,
         retryHistory: () => {
             setFailed(null);
             setRequested(scope);

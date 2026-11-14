@@ -441,6 +441,11 @@
         "features::review::runtime::tests::discussion_batch_tests::discussion_batches_fit_the_remaining_context_instead_of_failing_on_a_larger_default_page",
         "features::review::runtime::tests::discussion_batch_tests::six_discussions_fit_one_bounded_page_and_a_ten_file_review_finishes_inside_budget"
       ]
+    },
+    {
+      "id": "mention-person-trigger",
+      "runner": "node",
+      "path": "scripts/mention-person-trigger.test.mjs"
     }
   ]
 }
