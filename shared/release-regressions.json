@@ -483,6 +483,18 @@
         "features::review::runtime::tests::feedback_tests::memory_capability_never_authorizes_other_threads_findings_or_verdicts",
         "features::review::runtime::tests::feedback_tests::shared_comment_pages_satisfy_both_views_without_bypassing_reply_guards"
       ]
+    },
+    {
+      "id": "review-control-discussions",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/control_discussion_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::control_discussion_tests::administrative_commands_are_excluded_but_real_inline_comments_and_human_followups_stay_visible",
+        "features::review::runtime::tests::control_discussion_tests::manual_review_can_approve_complete_source_without_resolving_its_own_command_or_general_comments",
+        "features::review::runtime::tests::control_discussion_tests::a_new_inline_concern_blocks_publication_atomically_even_if_previous_context_had_only_commands",
+        "features::review::runtime::tests::control_discussion_tests::control_thread_exclusion_cannot_turn_redacted_or_unread_source_into_approval",
+        "features::review::runtime::tests::control_discussion_tests::measured_22056_token_trace_can_finish_while_redacted_source_stays_partial"
+      ]
     }
   ]
 }

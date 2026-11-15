@@ -7,6 +7,7 @@ pub mod coordinator;
 mod debug_log;
 mod discussion_reply;
 mod discussion_revision;
+mod discussion_scope;
 pub(crate) mod discussion_snippets;
 pub mod feedback;
 mod input_screen;
