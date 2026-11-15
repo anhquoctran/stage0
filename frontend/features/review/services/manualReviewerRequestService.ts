@@ -17,10 +17,10 @@ function currentSession(sessionId: string) {
   return useVirtualMrStore.getState().sessions.find((session) => session.id === sessionId);
 }
 
-function busy(sessionId: string): boolean {
+function busy(sessionId: string, ownBatch = false): boolean {
   const reviews = useReviewStore.getState();
   return Boolean(
-    reviews.reviewBatches[sessionId]
+    (!ownBatch && reviews.reviewBatches[sessionId])
     || isReviewStartingForSession(sessionId)
     || Object.values(reviews.activeRuns).some(
       (run) => run.sessionId === sessionId && run.status === 'running',
@@ -108,10 +108,11 @@ function unresolvedReport(findings: ReturnType<typeof reviewerFindings>, reviewe
   return `${i18n.t('reviewFlow.pausedTitle')}\n\n${i18n.t('reviewFlow.openFindings', { count: findings.length })}\n\n${lines.join('\n')}\n\n${i18n.t('reviewFlow.resolveThenRetry', { command: `\`${command}\`` })}`;
 }
 
-export async function requestManualReviewerReview(
+async function executeManualReviewerReview(
   sessionId: string,
   discussionId: string,
   reviewerId: string,
+  ownBatch = false,
 ): Promise<void> {
   const requestKey = `${sessionId}:${discussionId}:${reviewerId}`;
   if (handledRequests.has(requestKey)) return;
@@ -145,7 +146,7 @@ export async function requestManualReviewerReview(
     await botReply(discussionId, reviewerId, assigned.name, unresolvedReport(unresolved, reviewerId, assigned.name));
     return;
   }
-  if (busy(sessionId)) {
+  if (busy(sessionId, ownBatch)) {
     await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.busy'));
     return;
   }
@@ -199,4 +200,43 @@ export async function requestManualReviewerReview(
     const message = error instanceof Error ? error.message : String(error);
     await botReply(discussionId, reviewerId, assigned.name, i18n.t('reviewFlow.failed', { error: message }));
   }
+}
+
+
+/** Compatibility entry point for a single explicit reviewer. */
+export function requestManualReviewerReview(sessionId: string, discussionId: string, reviewerId: string): Promise<void> {
+  return executeManualReviewerReview(sessionId, discussionId, reviewerId);
+}
+
+const requestGroups = new Map<string, Promise<void>>();
+
+/** One reserved batch per MR; never launch all mentioned models concurrently. */
+export async function requestManualReviewerReviews(sessionId: string, discussionId: string, reviewerIds: string[]): Promise<void> {
+  const key = `${sessionId}:${discussionId}`;
+  const existing = requestGroups.get(key);
+  if (existing) return existing;
+  const ids = [...new Set(reviewerIds)];
+  if (!ids.length) return;
+  const run = async () => {
+    if (ids.length === 1) return requestManualReviewerReview(sessionId, discussionId, ids[0]);
+    if (busy(sessionId)) {
+      for (const id of ids) {
+        const name = getAssignedReviewerForSession(sessionId, id)?.name ?? 'Reviewer';
+        await botReply(discussionId, id, name, i18n.t('reviewFlow.busy'));
+      }
+      return;
+    }
+    const { setReviewBatch } = useReviewStore.getState();
+    try {
+      for (const [index, id] of ids.entries()) {
+        setReviewBatch(sessionId, { current: index + 1, total: ids.length, completed: index,
+          reviewerName: getAssignedReviewerForSession(sessionId, id)?.name ?? 'Reviewer', phase: 'reviewing' });
+        try { await executeManualReviewerReview(sessionId, discussionId, id, true); }
+        catch (error) { console.warn('Could not process a manual reviewer request:', error); }
+      }
+    } finally { setReviewBatch(sessionId, null); }
+  };
+  const job = run();
+  requestGroups.set(key, job);
+  try { await job; } finally { if (requestGroups.get(key) === job) requestGroups.delete(key); }
 }

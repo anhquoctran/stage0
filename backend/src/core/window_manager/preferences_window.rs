@@ -103,6 +103,20 @@ pub async fn open(app: &AppHandle, tab: Option<String>) -> Result<(), String> {
         .build();
     match result {
         Ok(window) => {
+            if let Err(error) = super::display_geometry::configure_window(
+                &window.as_ref().window(),
+                (1100.0, 800.0),
+                (900.0, 620.0),
+                true,
+            ) {
+                let _ = window.destroy();
+                state.destroyed();
+                return Err(crate::common::messages::failure(
+                    "backend.preferences.openFailed",
+                    serde_json::json!({}),
+                    format!("Could not fit Preferences to the display: {error}"),
+                ));
+            }
             #[cfg(target_os = "linux")]
             limit_linux_controls(&window);
             let _ = window;

@@ -19,12 +19,12 @@ export interface BotReviewersState {
   resetGlobalReviewers: () => void;
 
   // Repo Actions
-  setRepoActiveBotIds: (repoId: string, botIds: string[]) => void;
-  toggleRepoActiveBotId: (repoId: string, botId: string) => void;
-  addRepoCustomReviewer: (repoId: string, bot: Omit<BotReviewer, 'id'>) => string;
-  updateRepoCustomReviewer: (repoId: string, botId: string, updates: Partial<BotReviewer>) => void;
-  deleteRepoCustomReviewer: (repoId: string, botId: string) => void;
-  resetRepoToGlobal: (repoId: string) => void;
+  setRepoActiveBotIds: (repoId: string, botIds: string[]) => Promise<void>;
+  toggleRepoActiveBotId: (repoId: string, botId: string) => Promise<void>;
+  addRepoCustomReviewer: (repoId: string, bot: Omit<BotReviewer, 'id'>) => Promise<string>;
+  updateRepoCustomReviewer: (repoId: string, botId: string, updates: Partial<BotReviewer>) => Promise<void>;
+  deleteRepoCustomReviewer: (repoId: string, botId: string) => Promise<void>;
+  resetRepoToGlobal: (repoId: string) => Promise<void>;
 
   // Selector
   getEffectiveReviewers: (

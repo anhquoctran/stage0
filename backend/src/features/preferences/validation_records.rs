@@ -107,7 +107,7 @@ fn valid_env_name(name: &str) -> bool {
         && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
 }
 
-pub(super) fn validate_reviewer(value: &Value, index: usize) -> Result<(), String> {
+pub(crate) fn validate_reviewer(value: &Value, index: usize) -> Result<(), String> {
     let path = format!("reviewers[{index}]");
     let reviewer = value
         .as_object()

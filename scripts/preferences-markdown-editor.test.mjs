@@ -1,3 +1,4 @@
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -148,6 +149,6 @@ test('Markdown font tab exposes a shared select, reset and editor preview withou
   assert.ok(nodes.some((node) => node.type === 'textarea' && node.props.readOnly && node.props.className.includes('markdown-editor-textarea')));
   nodes.find((node) => node.props.title === 'Reset Markdown Editor Font to default (Fira Code)').props.onClick();
   assert.equal(props.draftMarkdownEditorFontFamily, 'Fira Code');
-  const css = readFileSync(new URL('../frontend/core/styles/index.css', import.meta.url), 'utf8');
+  const css = readStylesheet(new URL('../frontend/core/styles/index.css', import.meta.url));
   assert.match(css, /\.markdown-editor-textarea\s*\{\s*font-family:\s*var\(--markdown-editor-font-family, var\(--viewer-font-family, monospace\)\)/);
 });

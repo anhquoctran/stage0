@@ -1,10 +1,12 @@
 import type { VirtualMrDeletionActivity } from './VirtualMrDeletionActivity';
+import type { VirtualMrDiscussionActivity } from './VirtualMrDiscussionActivity';
 import type { VirtualMrStatus } from './VirtualMrStatus';
 import type { VirtualMrReviewer } from './VirtualMrReviewer';
 import type { RepoLabel } from './RepoLabel';
 import type { VirtualMrDiscussion } from './VirtualMrDiscussion';
 import type { VirtualMrCommit } from './VirtualMrCommit';
 import type { VirtualMrTitleChange } from './VirtualMrTitleChange';
+import type { MrSyncState } from './MrSyncState';
 
 export interface VirtualMrSession {
   id: string;
@@ -29,4 +31,6 @@ export interface VirtualMrSession {
   descriptionUpdatedAt?: string;
   titleHistory?: VirtualMrTitleChange[];
   deletionActivity?: VirtualMrDeletionActivity[];
+  discussionActivity?: VirtualMrDiscussionActivity[];
+  sync?: MrSyncState;
 }

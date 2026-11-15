@@ -5,5 +5,6 @@ export function createVirtualMrService(transport: CommandTransport): VirtualMrSe
   return {
     listVirtualMrSessions: (input) => transport.executeCommand('list_virtual_mr_sessions', input),
     saveVirtualMrSession: (input) => transport.executeCommand('save_virtual_mr_session', input),
+    readMrSync: (input) => transport.executeCommand('list_virtual_mr_sessions', input),
   };
 }

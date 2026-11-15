@@ -10,6 +10,7 @@ import { useAiMcpStore } from '../../../ai/store/useAiMcpStore';
 import { useBotReviewersStore } from '../../../ai/store/useBotReviewersStore';
 import { usePreferencesStore } from '../../../preferences/store/usePreferencesStore';
 import type { BotCategory } from '../../../virtual-mr/types/BotCategory';
+import { ReviewFeedbackMemories } from '../../../review/components/ReviewFeedbackMemories';
 import { useGitStore } from '../../store/useGitStore';
 import { RepositoryBotInheritanceCards } from './RepositoryBotInheritanceCards';
 import { RepositoryBotItem } from './RepositoryBotItem';
@@ -128,6 +129,8 @@ export const RepositoryAgentsTab: React.FC<{
           {translateUiText('git.repositoryAgents.description')}
         </p>
       </div>
+
+      {currentRepoId && <ReviewFeedbackMemories key={currentRepoId} repoId={currentRepoId} />}
 
       {/* INHERITANCE MODE SELECTOR CARDS */}
       <RepositoryBotInheritanceCards
@@ -260,12 +263,12 @@ export const RepositoryAgentsTab: React.FC<{
                 <RepositoryBotItem
                   key={bot.id}
                   bot={bot}
-                  toggleRepoActiveBotId={toggleRepoActiveBotId}
+                  toggleRepoActiveBotId={(repoId, botId) => { void toggleRepoActiveBotId(repoId, botId).catch((e) => showToast(String(e), 'error')); }}
                   currentRepoId={currentRepoId}
                   isChecked={isChecked}
                   isRepoExclusive={isRepoExclusive}
                   externalAgents={externalAgents}
-                  deleteRepoCustomReviewer={deleteRepoCustomReviewer}
+                  deleteRepoCustomReviewer={(repoId, botId) => { void deleteRepoCustomReviewer(repoId, botId).catch((e) => showToast(String(e), 'error')); }}
                 />
               );
             })}

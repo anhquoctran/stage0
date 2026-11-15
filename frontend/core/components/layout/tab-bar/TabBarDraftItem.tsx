@@ -18,7 +18,7 @@ export const TabBarDraftItem: React.FC<{
   return (
     <div
       onClick={onActivate}
-      className={`group relative h-8 px-2.5 border-t border-x flex items-center gap-2 cursor-pointer transition-colors shrink-0 max-w-[280px] rounded-sm ${
+      className={`ui-density-tab group relative h-8 px-2.5 border-t border-x flex items-center gap-2 cursor-pointer transition-colors shrink-0 max-w-[280px] rounded-sm ${
         isActive
           ? 'bg-mantle border-surface1 text-text font-medium shadow-xs'
           : 'bg-crust/50 border-transparent text-subtext0 hover:text-text hover:bg-surface0/40'

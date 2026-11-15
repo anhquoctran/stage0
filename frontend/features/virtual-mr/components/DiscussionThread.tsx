@@ -25,6 +25,9 @@ import { DiscussionReplyComment } from './discussion/DiscussionReplyComment';
 import { PendingDiscussionReply } from './discussion/PendingDiscussionReply';
 import { DiscussionThreadHeader } from './discussion/DiscussionThreadHeader';
 
+import { useDiscussionEntityNavigation } from '../hooks/useDiscussionEntityNavigation';
+import { CommitDetailsModal } from '../../git/components/CommitDetailsModal';
+
 const DiscussionCodeContext = codeContextModule?.DiscussionCodeContext || (() => null);
 
 export const DiscussionThread: React.FC<{
@@ -46,6 +49,7 @@ export const DiscussionThread: React.FC<{
   const submittingRef = useRef(false);
   const closeReference = useCallback(() => setReference(null), []);
 
+  const navigation = useDiscussionEntityNavigation(session);
   const deletion = useDiscussionDeletion(session.id);
   const busy = isSubmitting || deletion.isDeleting;
   const comments = getDiscussionComments(discussion);
@@ -116,7 +120,7 @@ export const DiscussionThread: React.FC<{
   const openReference = (event: React.MouseEvent<HTMLDivElement>) => {
     const link = (event.target as HTMLElement).closest?.('a');
     const mention = parseMentionReference(link?.getAttribute('href') ?? '');
-    if (mention) {
+    if (mention && (mention.kind === 'reviewer' || mention.kind === 'assignee')) {
       event.preventDefault();
       event.stopPropagation();
       const participants = getDiscussionMentionOptions(session, 'ai_agent', '');
@@ -153,7 +157,7 @@ export const DiscussionThread: React.FC<{
   const threadRelativeTime = formatGitLabTime(discussion.createdAt || rootComment?.createdAt || '');
 
   return (
-    <div data-delete-comment-id={rootComment?.id} className="space-y-2 select-text font-sans" onClick={openReference}>
+    <div data-delete-comment-id={rootComment?.id} className="space-y-2 select-text font-sans" onClick={openReference} onClickCapture={navigation.openReference}>
       {/* 1. Outer GitLab Thread Summary Header */}
       <DiscussionThreadHeader
         onDelete={rootComment?.canDelete && rootComment.authorType === 'user' && replies.length === 0
@@ -292,6 +296,9 @@ export const DiscussionThread: React.FC<{
           onClose={closeReference}
         />
       )}
+      {navigation.selectedCommit && navigation.repoPath && <CommitDetailsModal
+        key={`${navigation.repoPath}:${navigation.selectedCommit}`} repoPath={navigation.repoPath}
+        commitHash={navigation.selectedCommit} onClose={navigation.closeCommit} />}
     </div>
   );
 };

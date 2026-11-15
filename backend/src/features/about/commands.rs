@@ -6,7 +6,6 @@ pub struct SoftwareAboutInfo {
     pub name: String,
     pub author: String,
     pub package_version: String,
-    pub git_commit: String,
     pub arch: String,
     pub version: String,
     pub release_date: String,

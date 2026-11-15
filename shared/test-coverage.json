@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "react": {
+    "scope": "frontend/",
+    "report": "coverage/react/lcov.info",
+    "minimum": { "lines": 1.3, "functions": 1.2, "branches": 1.6 },
+    "protectedFiles": {
+      "frontend/common/components/CustomSelect.tsx": { "lines": 95, "functions": 95, "branches": 85 },
+      "frontend/common/components/CustomSelectPortal.tsx": { "lines": 100, "functions": 100, "branches": 100 },
+      "frontend/common/hooks/useOutsideDismiss.ts": { "lines": 100, "functions": 100, "branches": 90 },
+      "frontend/features/git/components/diff-viewer/FileEncodingPicker.tsx": { "lines": 100, "functions": 100, "branches": 100 },
+      "frontend/features/git/hooks/useFileDiffEncoding.ts": { "lines": 100, "functions": 100, "branches": 90 }
+    }
+  },
+  "rust": {
+    "scope": "backend/src/",
+    "report": "coverage/rust/lcov.info",
+    "minimum": { "lines": 45, "functions": 32 },
+    "protectedFiles": {}
+  }
+}

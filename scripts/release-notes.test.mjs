@@ -1,3 +1,4 @@
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -53,10 +54,7 @@ test('ReleaseNotesModal uses enlarged dimensions and MarkdownPreview for rich me
 });
 
 test('CSS provides rich markdown styling for images and tables', () => {
-  const cssSrc = readFileSync(
-    new URL('../frontend/core/styles/index.css', import.meta.url),
-    'utf-8'
-  );
+  const cssSrc = readStylesheet(new URL('../frontend/core/styles/index.css', import.meta.url));
 
   assert.match(cssSrc, /\.markdown-preview img/);
   assert.match(cssSrc, /\.markdown-preview table/);

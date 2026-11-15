@@ -1,10 +1,12 @@
 import type { ThemeMode } from './ThemeMode';
-import type { CatppuccinTheme } from './CatppuccinTheme';
+import type { ThemeId } from './ThemeId';
 
 export interface ThemeState {
   themeMode: ThemeMode;
-  theme: CatppuccinTheme; // Resolved theme ('mocha' | 'mocha-light')
+  theme: ThemeId;
+  darkThemeId: ThemeId;
+  lightThemeId: ThemeId;
   setThemeMode: (mode: ThemeMode) => void;
-  setTheme: (theme: CatppuccinTheme) => void;
+  setTheme: (theme: ThemeId) => void;
   toggleTheme: () => void;
 }

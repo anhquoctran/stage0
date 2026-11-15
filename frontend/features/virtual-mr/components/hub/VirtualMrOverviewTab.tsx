@@ -5,7 +5,7 @@ import { MarkdownPreview } from '../../../../common/components/MarkdownPreview';
 import { useGitStore } from '../../../git/store/useGitStore';
 import { useReviewStore } from '../../../review/store/useReviewStore';
 import { useVirtualMrStore } from '../../store/useVirtualMrStore';
-import { getDiscussionMentionOptions } from '../../utils/discussionMentions';
+import { DiscussionMarkdownEditor } from '../discussion/DiscussionMarkdownEditor';
 import { VirtualMrActivityTimeline } from '../overview/VirtualMrActivityTimeline';
 import { VirtualMrMergeDetails } from '../overview/VirtualMrMergeDetails';
 import { VirtualMrOverviewSidebar } from '../overview/VirtualMrOverviewSidebar';
@@ -208,9 +208,9 @@ export const VirtualMrOverviewTab: React.FC<VirtualMrOverviewTabProps> = ({ sess
                 components={{ command: <code className="rounded-sm bg-surface0 px-1" /> }}
               />
             </p>
-            <MarkdownEditor
+            <DiscussionMarkdownEditor
               value={newGeneralComment}
-              mentionOptions={getDiscussionMentionOptions(session)}
+              session={session}
               onChange={setNewGeneralComment}
               placeholder={translateUiText('virtualMr.overview.commentPlaceholder')}
               rows={6}

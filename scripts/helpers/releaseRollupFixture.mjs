@@ -4,8 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { releaseTargets } from '../release-promotion-github.mjs';
+import { policy } from '../release-channels.mjs';
 
 export function rollupFixture(t, { channel = 'nightly', conflict = false } = {}) {
+  // Keep the original published-snapshot regression assertions intact. This
+  // fixture explicitly selects their historical policy; live Beta uses develop.
+  const from = policy.promotion.routes.beta.from;
+  policy.promotion.routes.beta.from = 'nightly';
+  t.after(() => { policy.promotion.routes.beta.from = from; });
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stage0-rollup-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();

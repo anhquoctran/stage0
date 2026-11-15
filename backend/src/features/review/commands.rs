@@ -57,25 +57,7 @@ pub async fn start_ai_review(
         .state::<crate::features::preferences::PreferencesManager>()
         .read()?;
     let settings = preferences.settings.unwrap_or_default();
-    let ui_language = settings
-        .get("appearance")
-        .and_then(|section| section.get("language"))
-        .and_then(Value::as_str)
-        .filter(|language| crate::features::preferences::is_supported_app_language(language))
-        .unwrap_or(crate::features::preferences::DEFAULT_APP_LANGUAGE);
-    let output_language = settings
-        .get("ai")
-        .and_then(|section| section.get("agentOutputLanguage"))
-        .and_then(Value::as_str)
-        .filter(|language| {
-            crate::features::preferences::is_supported_agent_output_language(language)
-        })
-        .unwrap_or(crate::features::preferences::DEFAULT_AGENT_OUTPUT_LANGUAGE);
-    request.agent_output_language = if output_language == "follow-app" {
-        ui_language.to_owned()
-    } else {
-        output_language.to_owned()
-    };
+    request.agent_output_language = super::output_language::resolve(&settings);
     if request
         .reviewer_id
         .as_deref()
@@ -234,7 +216,7 @@ pub async fn start_ai_review(
             "review-v2:{:x}",
             Sha256::digest(
                 format!(
-                    "{}{}{}{}{}{:?}{}",
+                    "{}{}{}{}{}{:?}{}{}{}",
                     super::runtime::SYSTEM,
                     request.instructions,
                     policy,
@@ -250,6 +232,8 @@ pub async fn start_ai_review(
                         .unwrap_or_default(),
                     request.reply_discussion_id,
                     request.agent_output_language,
+                    super::feedback::POLICY,
+                    super::output_language::POLICY,
                 )
                 .as_bytes()
             )
@@ -382,6 +366,7 @@ pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), Str
         let db=worker_app.state::<Database>();let run=db.get_review_run(&run_id)?;
         let (repo,base,head,title)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch,s.title FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?))).map_err(|_| crate::common::messages::code("backend.virtualMr.sessionNotFound"))?};
         if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err(crate::common::messages::code("backend.review.snapshotStale"));}
+        crate::features::virtual_mr::sync::verify_review(&db,&run)?;
         let guards = Arc::new(GuardrailsEngine::new());
         let context = super::context::ReviewContext::new(run.snapshot.clone(), guards);
         context.validate_findings(&run.findings)?;

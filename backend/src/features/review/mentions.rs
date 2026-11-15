@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 use serde_json::{json, Value};
 
-fn encode_id(id: &str) -> String {
+pub(super) fn encode_id(id: &str) -> String {
     id.bytes()
         .map(|byte| {
             if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {
@@ -124,22 +124,11 @@ pub fn has_reviewer_mention(body: &str, reviewer_id: &str) -> bool {
 /// A full-review command is handled by the host workflow, which posts progress
 /// and completion replies after checking reviewer-specific unresolved findings.
 pub fn is_manual_review_command(body: &str) -> bool {
-    let body = body.trim();
-    if body.lines().count() != 1 {
-        return false;
-    }
-    let Some((label, link)) = body.rsplit_once("](") else {
-        return false;
-    };
-    if !label.starts_with("[@") || label.len() <= 2 || label.contains('\n') {
-        return false;
-    }
-    let Some((href, command)) = link.split_once(')') else {
-        return false;
-    };
-    href.strip_prefix("#mr-mention/reviewer/")
-        .is_some_and(|id| !id.is_empty())
-        && command.trim().eq_ignore_ascii_case("review")
+    super::manual_command::targets(body).is_some()
+}
+
+pub(super) fn manual_review_targets_reviewer(body: &str, reviewer: &str) -> bool {
+    super::manual_command::targets(body).is_some_and(|ids| ids.iter().any(|id| id == reviewer))
 }
 
 pub fn can_reply_to_comment(

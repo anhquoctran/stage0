@@ -139,7 +139,7 @@ export const PreferencesMarkdownFontTab: React.FC<{
         <div className="text-[11px] font-mono uppercase tracking-wider text-subtext0">{t('preferences.markdownFont.livePreview')}</div>
         <div className="markdown-preview p-4 rounded-sm bg-crust border border-surface0 select-text"
           style={{ fontFamily: draftMarkdownFontFamily, fontSize: `${draftMarkdownFontSize}px` }}>
-          <h2 style={{ fontWeight: draftMarkdownHeadingWeight, borderBottom: '1px solid var(--ctp-surface0)', paddingBottom: '0.2em', marginBottom: '0.4em' }}>
+          <h2 style={{ fontWeight: draftMarkdownHeadingWeight, borderBottom: '1px solid var(--theme-surface0)', paddingBottom: '0.2em', marginBottom: '0.4em' }}>
             {t('preferences.markdownFont.previewHeader')}
           </h2>
           <p className="text-subtext1 mb-2">

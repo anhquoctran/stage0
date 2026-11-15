@@ -5,7 +5,7 @@ import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { type DiscussionCodeSnippet } from '../types/DiscussionCodeSnippet';
 import { type ReviewActionType } from '../types/ReviewActionType';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
-import { parseReviewerReviewCommand } from '../utils/parseReviewerReviewCommand';
+import { parseReviewerReviewCommands } from '../utils/parseReviewerReviewCommand';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { VirtualMrState } from '../types/VirtualMrState';
 import { refreshCommentPermissions } from './refreshCommentPermissions';
@@ -116,10 +116,11 @@ export const createDiscussionSlice = (
     }));
     await get().invalidateReviewerApprovals(sessionId);
     await refreshCommentPermissions(sessionId, set, get);
-    const reviewerId = parseReviewerReviewCommand(payload.initialComment);
-    if (reviewerId) {
+    const reviewerIds = payload.filePath == null
+      ? parseReviewerReviewCommands(payload.initialComment) : [];
+    if (reviewerIds.length) {
       void import('../../review/services/manualReviewerRequestService')
-        .then(({ requestManualReviewerReview }) => requestManualReviewerReview(sessionId, discId, reviewerId))
+        .then(({ requestManualReviewerReviews }) => requestManualReviewerReviews(sessionId, discId, reviewerIds))
         .catch((error) => console.warn('Could not process the manual review request:', error));
     } else {
       void import('../../review/services/assignedReviewService')
@@ -205,42 +206,22 @@ export const createDiscussionSlice = (
     resolveType: VirtualMrDiscussion['resolveType'] = 'manual'
   ) => {
     if (resolveType === 'ai_verified') throw new Error(AI_REVIEW_UNAVAILABLE);
-    const { sessions } = get();
+    const target = get().sessions.find((session) => session.discussions.some((discussion) => discussion.id === discussionId));
+    if (!target) return;
+    await getApplicationServices().discussions.resolveMrDiscussion({
+      discussionId, isResolved, resolveType,
+      resolvedBy: isResolved ? target.assignee.name : null,
+    });
     const now = new Date().toISOString();
-
-    const updated = sessions.map((s) => ({
-      ...s,
-      discussions: s.discussions.map((d) => {
-        if (d.id !== discussionId) return d;
-        return {
-          ...d,
-          isResolved,
-          resolveType,
-          resolvedBy: isResolved ? s.assignee.name : null,
-          resolvedAt: isResolved ? now : null,
-        };
-      }),
-    }));
-
-    set({ sessions: updated });
-
-    try {
-      await getApplicationServices().discussions.resolveMrDiscussion({
-        discussionId,
-        isResolved,
-        resolveType,
-        resolvedBy: isResolved ? sessions.find((session) =>
-          session.discussions.some((discussion) => discussion.id === discussionId)
-        )?.assignee.name || 'Local User' : null,
-      });
-    } catch (e) {
-      console.error('Failed to resolve discussion in db:', e);
-    }
-    const targetSessionId = sessions.find((session) =>
-      session.discussions.some((discussion) => discussion.id === discussionId)
-    )?.id;
-    if (targetSessionId && !isResolved) await get().invalidateReviewerApprovals(targetSessionId);
-    if (targetSessionId && isResolved) await get().tryResolveSession(targetSessionId);
+    set((state) => ({ sessions: state.sessions.map((session) => ({ ...session,
+      discussions: session.discussions.map((discussion) => discussion.id === discussionId
+        ? { ...discussion, isResolved, resolveType, resolvedBy: isResolved ? target.assignee.name : null, resolvedAt: isResolved ? now : null }
+        : discussion),
+    })) }));
+    try { await get().refreshDiscussions(target.id); }
+    catch (error) { console.warn('Could not refresh persisted discussion activity:', error); }
+    if (!isResolved) await get().invalidateReviewerApprovals(target.id);
+    if (isResolved) await get().tryResolveSession(target.id);
   },
 
   reverifyDiscussionFix: async (discussionId: string) => {
@@ -267,10 +248,14 @@ export const createDiscussionSlice = (
 
   refreshDiscussions: async (sessionId: string) => {
     const repoId = get().currentRepoId;
-    const [items, deletionActivity] = await Promise.all([
+    const [items, deletionActivity, discussionActivity] = await Promise.all([
       getApplicationServices().discussions.listMrDiscussions({ sessionId }),
       getApplicationServices().discussions.listMrDeletionActivity({ sessionId }).catch((error) => {
         console.warn('Could not refresh discussion deletion activity:', error);
+        return undefined;
+      }),
+      Promise.resolve().then(() => getApplicationServices().discussions.listMrDiscussionActivity({ sessionId })).catch((error) => {
+        console.warn('Could not refresh discussion resolution activity:', error);
         return undefined;
       }),
     ]);
@@ -278,7 +263,7 @@ export const createDiscussionSlice = (
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === sessionId
-          ? { ...session, deletionActivity: deletionActivity ?? session.deletionActivity, discussions: items.map((item) => {
+          ? { ...session, deletionActivity: deletionActivity ?? session.deletionActivity, discussionActivity: discussionActivity ?? session.discussionActivity, discussions: items.map((item) => {
               const loaded = fromDbDiscussion(item, session.assignee);
               const pending = session.discussions.find((discussion) => discussion.id === item.id)
                 ?.children.filter((comment) => comment.isPending) ?? [];

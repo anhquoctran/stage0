@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "alucard",
+  "name": "Alucard",
+  "kind": "light",
+  "version": "1.0.0",
+  "author": "Dracula Theme",
+  "colors": { "base": "#fffbeb", "brand": "#644ac9", "text": "#1f1f1f" }
+}

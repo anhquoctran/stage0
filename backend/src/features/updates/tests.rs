@@ -60,11 +60,7 @@ fn redirects_are_limited_to_https_github_asset_hosts() {
 #[test]
 fn installed_version_selects_only_its_own_release_feed() {
     use super::policy::{manifest_url, same_channel};
-    for (version, channel) in [
-        ("0.0.1", "stable"),
-        ("0.0.2-nightly", "nightly"),
-        ("0.0.3-beta", "beta"),
-    ] {
+    for (version, channel) in [("0.0.1", "stable"), ("0.0.3-beta", "beta")] {
         assert!(manifest_url(version).contains(&format!("channel-{channel}/")));
         assert!(same_channel(version, version));
     }
@@ -72,4 +68,15 @@ fn installed_version_selects_only_its_own_release_feed() {
     assert!(!same_channel("0.0.2-nightly", "0.0.3-beta"));
     assert!(!same_channel("0.0.1", "0.0.2-rc.1"));
     assert!(!same_channel("invalid", "invalid"));
+}
+
+#[test]
+fn retired_nightly_versions_never_use_or_accept_a_nightly_feed() {
+    use super::policy::{manifest_url, same_channel};
+    for version in ["0.0.2-nightly", "0.0.2-nightly.20261112.1"] {
+        assert!(!manifest_url(version).contains("channel-nightly"));
+        assert!(!same_channel(version, version));
+        assert!(!same_channel("0.0.1", version));
+        assert!(!same_channel("0.0.3-beta", version));
+    }
 }

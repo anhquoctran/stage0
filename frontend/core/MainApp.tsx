@@ -1,3 +1,4 @@
+import { subscribeDisplayScale } from '../common/utils/displayScale';
 import { useDesktopWindowChrome } from './hooks/useDesktopWindowChrome';
 import { useWindowChromeStore } from './store/useWindowChromeStore';
 import { useStartupSplash } from './hooks/useStartupSplash';
@@ -6,7 +7,7 @@ import { startupProgress } from './services/startup/startupProgress';
 import type { WindowStartupContext } from '../features/git/types/WindowStartupContext';
 import { useVirtualMrStore } from '../features/virtual-mr/store/useVirtualMrStore';
 import { useApplicationServices } from './services/runtime/useApplicationServices';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { clsx } from 'clsx';
 
 import { MainLayout } from './components/layout/MainLayout';
@@ -17,7 +18,6 @@ import { useNotificationStore } from '../features/notifications/store/useNotific
 import { type RepoInfo } from '../features/git/types/RepoInfo';
 import { FirstLaunchWelcome } from '../features/onboarding/components/FirstLaunchWelcome';
 import { useOnboardingStore } from '../features/onboarding/store/useOnboardingStore';
-import { reviewAssignedSessionAfterGitChange } from '../features/review/services/assignedReviewService';
 import { installAutoHideScrollbars } from './services/autoHideScrollbars';
 import { SoftwareUpdateNotice } from '../features/updates/components/SoftwareUpdateNotice';
 import { isMacOS } from '../common/utils/shortcuts';
@@ -42,6 +42,10 @@ export const MainApp: React.FC = () => {
   const isMac = platform === 'macos' || (!platform && isMacOS());
   const isCustomMacWindow = isMac && !hideCustomFrame;
   useWindowFrameClipping(isCustomMacWindow);
+
+  const hasActiveMr = useVirtualMrStore(state => Boolean(state.activeSessionId) && !state.isDraftActive);
+  const hasActiveMrRef = useRef(hasActiveMr);
+  hasActiveMrRef.current = hasActiveMr;
 
   useEffect(() => {
     installAutoHideScrollbars();
@@ -75,8 +79,20 @@ export const MainApp: React.FC = () => {
             register(appServices.platform.events.subscribe<{ repo_path: string }>('repo-fs-changed', (event) => {
               const activePath = useGitStore.getState().currentRepo?.local_path;
               if (activePath === event.repo_path) {
-                refreshDiff();
-                void reviewAssignedSessionAfterGitChange(event.repo_path);
+                if (!hasActiveMrRef.current) refreshDiff();
+              }
+            })),
+            register(appServices.platform.events.subscribe<{ repoId: string }>('repo-settings-changed', (event) => {
+              if (useGitStore.getState().currentRepo?.id === event.repoId) {
+                void useVirtualMrStore.getState().refreshRepoMetadata(event.repoId)
+                  .catch((error) => useGitStore.getState().showToast(String(error), 'error'));
+              }
+            })),
+            register(appServices.platform.events.subscribe<{ repo_path: string }>('repo-settings-file-changed', (event) => {
+              const repo = useGitStore.getState().currentRepo;
+              if (repo?.local_path === event.repo_path) {
+                void useVirtualMrStore.getState().refreshRepoMetadata(repo.id)
+                  .catch((error) => useGitStore.getState().showToast(String(error), 'error'));
               }
             })),
             register(appServices.platform.events.subscribe<RepoInfo>('repo-open-request', (event) => {
@@ -145,7 +161,9 @@ export const MainApp: React.FC = () => {
   }, [appServices, initApp, attachRepoToCurrentWindow, refreshDiff]);
 
   useEffect(() => {
-    void syncUnreadBadge(unreadCount);
+    const sync = () => { void syncUnreadBadge(unreadCount); };
+    sync();
+    return subscribeDisplayScale(sync);
   }, [unreadCount]);
 
   return (

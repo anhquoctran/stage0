@@ -125,6 +125,7 @@ impl Database {
         }
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
+        crate::features::virtual_mr::sync::validate_publication(&tx, run)?;
         let mut status_changed = false;
         if run.reply_discussion_id.is_some() {
             let reviewer = run
@@ -191,19 +192,13 @@ impl Database {
                             "The discussion changed before the AI reply could be posted".into()
                         );
                     }
-                    let (kind, id, previous_body): (String, String, String) = tx.query_row(
-                        "SELECT author_type,author_id,body FROM virtual_mr_comments WHERE id=?1", [target_comment_id],
-                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
-                    ).map_err(|error| error.to_string())?;
-                    if !super::mentions::can_reply_to_comment(
+                    if !super::discussion_reply::can_reply(
                         &tx,
                         &run.session_id,
                         run.reviewer_id.as_deref(),
-                        &kind,
-                        &id,
-                        &previous_body,
+                        discussion_id,
                     ) {
-                        return Err("AI reply requires an unanswered user comment or a direct mention from another reviewer".into());
+                        return Err("AI reply requires a direct mention of this assigned reviewer in the latest comment".into());
                     }
                     let now = chrono::Utc::now().to_rfc3339();
                     tx.execute(
@@ -276,18 +271,15 @@ impl Database {
                 }
             }
         }
+        let unresolved_count = super::discussion_scope::unresolved_ids(&tx, &run.session_id)?.len();
+        if run.decision.as_deref() == Some("approve") && unresolved_count > 0 {
+            return Err("Approval requires no unresolved review discussions at publication".into());
+        }
         if let Some(reviewer_id) = run
             .reviewer_id
             .as_deref()
             .filter(|_| run.reply_discussion_id.is_none())
         {
-            let unresolved_count: i64 = tx
-                .query_row(
-                    "SELECT COUNT(*) FROM virtual_mr_discussions WHERE session_id=?1 AND is_resolved=0",
-                    [&run.session_id],
-                    |row| row.get(0),
-                )
-                .map_err(|e| e.to_string())?;
             let reviewer_status = if run.status == "completed"
                 && run.decision.as_deref() == Some("approve")
                 && run.findings.is_empty()
@@ -340,6 +332,7 @@ impl Database {
             }
         }
         let mut saved = run.clone();
+        crate::features::virtual_mr::sync::complete_review(&tx, run)?;
         saved.published = true;
         tx.execute(
             "UPDATE ai_review_runs SET payload=?2 WHERE id=?1",

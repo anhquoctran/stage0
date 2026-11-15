@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "one-dark-pro",
+  "name": "One Dark Pro",
+  "kind": "dark",
+  "version": "1.0.0",
+  "author": "Binaryify",
+  "colors": { "base": "#282c34", "brand": "#61afef", "text": "#abb2bf" }
+}

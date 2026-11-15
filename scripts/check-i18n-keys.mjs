@@ -70,6 +70,9 @@ if (localeFiles.length !== 15 || localeFiles.some((name, index) => name !== expe
     if (!sourceKeySet.has(code)) {
       errors++;
       console.error(`Backend message code ${code} has no en.json text: ${locations.join(', ')}`);
+    } else if (/\{[a-zA-Z][a-zA-Z0-9]*\}/u.test(String(getPath(source, code)).replace(/\{\{[^{}]+\}\}/gu, ''))) {
+      errors++;
+      console.error(`Backend message code ${code} uses single-brace interpolation instead of {{param}}`);
     }
   }
   if (referencedMessageCodes.size) {

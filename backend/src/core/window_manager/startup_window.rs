@@ -62,19 +62,23 @@ fn configure_main_window(window: &Window, maximized: bool) -> Result<(), String>
             restore_linux_system_titlebar(window)?;
         }
     }
-    let (width, height) = default_window_size();
-    let (min_width, min_height) = minimum_window_size();
+    let geometry = super::display_geometry::window_geometry(
+        window,
+        default_window_size(),
+        minimum_window_size(),
+    );
+    let (width, height) = geometry.size;
+    let (min_width, min_height) = geometry.minimum;
+    window
+        .set_min_size(None::<tauri::Size>)
+        .map_err(|error| error.to_string())?;
     window
         .set_size(tauri::LogicalSize::new(width, height))
         .map_err(|error| error.to_string())?;
     window
         .set_min_size(Some(tauri::LogicalSize::new(min_width, min_height)))
         .map_err(|error| error.to_string())?;
-    // Wayland compositors own window placement and may reject client positioning.
-    #[cfg(target_os = "linux")]
-    let _ = window.center();
-    #[cfg(not(target_os = "linux"))]
-    window.center().map_err(|error| error.to_string())?;
+    geometry.center(window)?;
     if maximized {
         window.maximize().map_err(|error| error.to_string())?;
     }

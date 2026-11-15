@@ -22,6 +22,29 @@ snapshot reads, evidence checks and publication remain Rust responsibilities.
 JSON encoding prevents data from changing envelope syntax; it does not prove
 that a model will ignore a malicious natural-language instruction.
 
+## Reviewer output language
+
+At admission, `review/output_language.rs` resolves `ai.agentOutputLanguage` from
+saved Preferences. An explicit supported language overrides the UI language;
+`follow-app`, missing or invalid values use the supported UI language with English
+fallback. IPC cannot supply this privileged selection. It stays fixed throughout
+one run, and the next full review or discussion reply reads current Preferences.
+
+The standard and compact system prompts end with the same explicit language
+contract. Finding titles/bodies, replies, resolution explanations, generated MR
+descriptions, feedback explanations and summaries use the chosen language rather
+than copying the language of source or earlier discussion. Tool schema text fields
+repeat the short language directive, including findings nested in `submit_review`.
+Code, exact evidence/quotes, mentions, paths, identifiers and protocol enums are
+preserved. All native provider protocols and the ACP envelope share this contract;
+it grants no additional capability and does not change evidence or publication.
+
+The initial context contains `outputLanguage`; the `output_language` history event
+records only its code and full/reply scope for diagnosis. There is no extra model
+request, automatic translation or heuristic language rejection. Model compliance
+remains probabilistic; protocol fixtures verify consistent configuration and wire
+instructions, not live model quality. Existing historical comments are retained.
+
 ## Grouped source delivery
 
 Full MR runs receive an initial `diffBatch` in the user context. It contains
@@ -60,14 +83,37 @@ Ordinary user-created discussions and replies enqueue
 `queueAssignedDiscussionReply`, not a full MR batch. A per-session queue waits
 for existing reviews/batches, coalesces repeated requests for a thread and
 refreshes context between reviewers. Exact direct mentions route replies;
-quoted/code mentions do not. Without an explicit recipient, the original
-assigned bot is preferred. Backend checks remain authoritative and require a
-currently assigned, eligible reviewer.
+quoted/code mentions do not. Every thread, including a finding authored by the
+reviewer, requires an explicit mention of that reviewer in the latest comment.
+MR/commit references, ownership and earlier bot replies never authorize a reply.
+The UI keeps routing candidates separate from the mention-only admission gate in
+`useReviewStore.startForSession` (hydrated comments are checked before IPC); bare
+mentions/punctuation are rejected and rejected candidates are not requeued unless
+another run is actually busy;
+`review/discussion_reply.rs` independently checks assignment and direct addressing
+at admission, listing, staging and transactional publication, also for full reviews.
 
-The exact root body `[@Assigned reviewer](#mr-mention/reviewer/<encoded-id>) review`
-is a separate host workflow. The frontend recognizes the editor-generated
-Markdown mention, checks that bot's unresolved code discussions and starts one
-full run for that bot only. The runtime prompt treats this as normal full-review
+A mention only permits the reviewer to consider responding. Native and ACP prompts
+require a substantive question, useful clarification, requested analysis or new
+evidence; greetings, acknowledgements, mention-only messages and repeated answers
+should receive no reply. The model may finish with `submit_review` and no queued
+reply. `runtime/reply_completion.rs` requires the complete root/latest comment and
+an unchanged current revision before this deliberate no-op. The run is recorded
+as completed but unpublished, with its reason in the summary. No comment, finding,
+MR description/verdict update or success notification is produced. Failures and
+incomplete checks still notify. Completed no-reply checks share the same bounded
+comment-version cache as replies, preventing repeated work on unchanged mentions.
+
+The exact root body `[@Bot1](#mr-mention/reviewer/id1) [@Bot2](#mr-mention/reviewer/id2) review`
+is a separate host workflow. One or more reviewer mentions are accepted, separated
+by spaces/tabs and followed by a single `review` suffix. Duplicate IDs run once;
+quoted/code mentions, assignees, extra prose and malformed links are rejected.
+The frontend reserves one MR batch and runs explicitly named bots sequentially,
+checking each bot's assignment, configuration, consent and unresolved code findings.
+A blocked or failed bot does not suppress eligible peers. The backend independently
+checks the original human root command and the selected bot's identity/findings
+for every run. Full-review commands in reply comments never start full reviews or
+model relevance checks; ordinary substantive mentions still use the reply workflow. The runtime prompt treats this as normal full-review
 intent; it grants no extra authority. Backend reply eligibility marks the exact
 command as host-managed so model-generated reply actions cannot race with the
 host's progress and completion replies. Other discussion bodies retain the
@@ -85,8 +131,8 @@ default to full-review scope. A reply run exposes only:
 The registry, dispatch/submission checks and publication transaction enforce the
 scope independently. No description generation, new findings, resolutions, MR
 approval, other-thread actions or reviewer/MR status updates are authorized.
-Completion requires a queued reply. `completed` here means a completed discussion
-reply, not full MR coverage; the UI identifies it explicitly. Git-change and
+Completion requires a queued reply or a fully observed, fresh no-reply decision.
+`completed` here means a completed discussion check, not full MR coverage; the UI identifies it explicitly. Git-change and
 explicit full-review workflows retain the complete review tool set and guards.
 
 Reply budgets are 16 turns, 24 tool calls, 32 KiB delivered context, 384 KiB

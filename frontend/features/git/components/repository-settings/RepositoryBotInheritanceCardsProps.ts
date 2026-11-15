@@ -7,7 +7,7 @@ export interface RepositoryBotInheritanceCardsProps {
   onClose: () => void;
   setIsPreferencesOpen: (open: boolean) => void;
   activeBotSet: Set<string>;
-  resetRepoToGlobal: (repoId: string) => void;
+  resetRepoToGlobal: (repoId: string) => Promise<void>;
   currentRepoId: string;
   showToast: (msg: string, level?: GitState['toastLevel']) => void;
 }

@@ -4,4 +4,7 @@ mod deletion_policy;
 mod discussion_deletion;
 mod discussion_deletion_outcome;
 pub mod persistence;
+mod session_listing;
 pub(crate) mod status_notification;
+pub mod sync;
+pub use session_listing::SessionListing;

@@ -166,7 +166,7 @@ async function waitForSessionIdle(sessionId: string, includeBatch = false): Prom
   throw new Error('Timed out waiting for another review of this Virtual MR to finish.');
 }
 
-/** User comments enqueue bounded replies; they never start a full MR review. */
+/** Direct mentions enqueue bounded relevance checks; a completed check may post no reply. */
 export async function queueAssignedDiscussionReply(sessionId: string, discussionId: string): Promise<void> {
   const pending = queuedDiscussionReplies.get(sessionId) || new Set<string>();
   pending.add(discussionId);
@@ -196,7 +196,12 @@ export async function queueAssignedDiscussionReply(sessionId: string, discussion
           const { config, allowRemote } = await reviewerStartSettings(sessionId, reviewer.profile, true);
           const run = await useReviewStore.getState().startForSession(sessionId, config,
             allowRemote, { id: reviewer.id, name: reviewer.name }, false, target);
-          if (!run) { pending.add(target); break; }
+          if (!run) {
+            const busy = isReviewStartingForSession(sessionId) || Object.values(useReviewStore.getState().activeRuns)
+              .some((item) => item.sessionId === sessionId && item.status === 'running');
+            if (busy) { pending.add(target); break; }
+            continue; // Admission may quietly reject an unaddressed or stale candidate.
+          }
           const finished = await waitForReviewRun(run.id, () => {});
           if (!['completed', 'partial'].includes(finished.status)) throw new Error(finished.error || i18n.t('review.toasts.discussionReplyIncomplete'));
           if (version) attemptedReplyComments.set(key, version);

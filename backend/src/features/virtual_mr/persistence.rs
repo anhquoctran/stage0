@@ -1,4 +1,7 @@
 mod virtual_mr_deletion_activity;
+mod virtual_mr_discussion_activity;
+pub use virtual_mr_discussion_activity::VirtualMrDiscussionActivity;
+mod discussion_resolution;
 pub use virtual_mr_deletion_activity::VirtualMrDeletionActivity;
 pub(super) mod deletion_activity;
 mod virtual_mr_session_db;
@@ -250,10 +253,16 @@ impl Database {
             )?;
         }
 
+        super::sync::guard_saved(&tx, &s.id)?;
+        let saved_status: String = tx.query_row(
+            "SELECT status FROM virtual_mr_sessions WHERE id=?1",
+            [&s.id],
+            |r| r.get(0),
+        )?;
         tx.commit()?;
         Ok((
             VirtualMrSessionSaveOutcome::Saved,
-            previous_status.filter(|status| status != &s.status),
+            previous_status.filter(|status| status != &saved_status),
         ))
     }
 

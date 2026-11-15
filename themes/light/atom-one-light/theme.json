@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "atom-one-light",
+  "name": "Atom One Light",
+  "kind": "light",
+  "version": "1.0.0",
+  "author": "GitHub / Atom",
+  "colors": { "base": "#fafafa", "brand": "#3566d3", "text": "#383a42" }
+}

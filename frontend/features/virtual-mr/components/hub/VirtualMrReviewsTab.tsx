@@ -12,6 +12,7 @@ import { ReviewFindingCard } from '../../../review/components/ReviewFindingCard'
 import { ReviewRunSummary } from '../../../review/components/ReviewRunSummary';
 import { useReviewStore } from '../../../review/store/useReviewStore';
 import type { VirtualMrReviewsTabProps } from './VirtualMrReviewsTabProps';
+import { MrSyncNotice } from '../MrSyncNotice';
 
 export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ session }) => {
   const { t: translateUiText } = useUiTextTranslation();
@@ -122,6 +123,7 @@ export const VirtualMrReviewsTab: React.FC<VirtualMrReviewsTabProps> = ({ sessio
         {run ? (
           <div className="space-y-6">
             {/* Run Overview Summary */}
+            <MrSyncNotice sync={session.sync} reviewed={run.snapshot} />
             <ReviewRunSummary run={run} isPublishing={isPublishing} publish={publish} />
 
             {/* Findings Section */}

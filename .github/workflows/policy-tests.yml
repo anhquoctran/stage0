@@ -1,8 +1,9 @@
 name: Release policy tests
+run-name: 'Release policy tests · PR #${{ github.event.pull_request.number }} · ${{ github.base_ref }} · ${{ github.event.pull_request.head.sha }}'
 
 on:
   pull_request:
-    branches: [develop, nightly, beta, main]
+    branches: [develop, beta, main]
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:

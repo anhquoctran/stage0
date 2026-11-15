@@ -1,3 +1,4 @@
+import { commitRepositorySettings } from '../services/repositorySettingsDocuments';
 import { getApplicationServices } from '../../../core/services/runtime/applicationRuntime';
 
 import { type RepoLabel } from '../types/RepoLabel';
@@ -10,94 +11,54 @@ export const createRepoSettingsSlice = (
   get: () => VirtualMrState
 ) => ({
   createRepoLabel: async (name: string, color: string, description?: string) => {
-    const { currentRepoId, repoLabels } = get();
-    if (!currentRepoId) return;
-
-    const id = `label-${Date.now()}`;
-    const newLabel: RepoLabel = { id, repoId: currentRepoId, name, color, description };
-    try {
-      await getApplicationServices().repositorySettings.createRepoLabel({
-        label: { id, repo_id: currentRepoId, name, color, description: description || null },
-      });
-      set({ repoLabels: [...repoLabels, newLabel] });
-      return newLabel;
-    } catch (e) {
-      console.error('Failed to create repo label:', e);
-      throw e;
-    }
+    const repoId = get().currentRepoId;
+    if (!repoId) return;
+    const id = crypto.randomUUID();
+    const saved = await commitRepositorySettings(repoId, (current) => ({
+      labels: [...current.labels, { id, name, color, description: description || null }],
+    }));
+    const label = saved.labels[saved.settings.labels.findIndex((label) => label.id === id)];
+    return { id: label.id, repoId, name: label.name, color: label.color, description: label.description || undefined };
   },
 
   updateRepoLabel: async (label: RepoLabel) => {
-    const { repoLabels, sessions } = get();
-    try {
-      await getApplicationServices().repositorySettings.updateRepoLabel({
-        label: {
-          id: label.id,
-          repo_id: label.repoId,
-          name: label.name,
-          color: label.color,
-          description: label.description || null,
-        },
-      });
-      set({
-        repoLabels: repoLabels.map((l) => (l.id === label.id ? label : l)),
-        sessions: sessions.map((s) => ({
-          ...s,
-          labels: s.labels.map((l) => (l.id === label.id ? label : l)),
-        })),
-      });
-    } catch (e) {
-      console.error('Failed to update repo label:', e);
-    }
+    await commitRepositorySettings(label.repoId, (current, doc) => {
+      const index = doc.labels.findIndex((item) => item.id === label.id);
+      if (index < 0) throw new Error('Label no longer exists');
+      return { labels: current.labels.map((item, i) => i === index
+        ? { ...item, name: label.name, color: label.color, description: label.description || null } : item) };
+    });
   },
 
   deleteRepoLabel: async (labelId: string) => {
-    const { repoLabels, sessions } = get();
-    try {
-      await getApplicationServices().repositorySettings.deleteRepoLabel({ id: labelId });
-      set({
-        repoLabels: repoLabels.filter((l) => l.id !== labelId),
-        sessions: sessions.map((s) => ({
-          ...s,
-          labels: s.labels.filter((l) => l.id !== labelId),
-        })),
-      });
-    } catch (e) {
-      console.error('Failed to delete repo label:', e);
-    }
+    const repoId = get().currentRepoId;
+    if (!repoId) return;
+    await commitRepositorySettings(repoId, (current, doc) => {
+      const index = doc.labels.findIndex((item) => item.id === labelId);
+      if (index < 0) throw new Error('Label no longer exists');
+      return { labels: current.labels.filter((_, i) => i !== index) };
+    });
   },
 
   loadPresetLabels: async () => {
-    const { currentRepoId } = get();
-    if (!currentRepoId) return;
-
-    for (const p of PRESET_REPO_LABELS) {
-      try {
-        await get().createRepoLabel(p.name, p.color, p.description);
-      } catch {}
-    }
+    const repoId = get().currentRepoId;
+    if (!repoId) return;
+    await commitRepositorySettings(repoId, (current) => ({ labels: [
+      ...current.labels,
+      ...PRESET_REPO_LABELS.filter((preset) => !current.labels.some((label) => label.name === preset.name))
+        .map((preset) => ({ ...preset, id: crypto.randomUUID() })),
+    ] }));
   },
 
-  // Repo Settings Actions
   saveRepoSettings: async (updates: Partial<RepoSettings>) => {
     const { repoSettings, currentRepoId } = get();
-    if (!currentRepoId || !repoSettings) return;
-
-    const newSettings: RepoSettings = { ...repoSettings, ...updates };
-    set({ repoSettings: newSettings });
-
-    try {
-      await getApplicationServices().repositorySettings.saveRepoSettings({
-        settings: {
-          repo_id: currentRepoId,
-          default_base_branch: newSettings.defaultBaseBranch,
-          inherit_global_agents: newSettings.inheritGlobalAgents,
-          custom_agent_rules: newSettings.customAgentRules || null,
-        },
-      });
-    } catch (e) {
-      console.error('Failed to save repo settings:', e);
-    }
+    if (!currentRepoId || !repoSettings) throw new Error('Repository settings unavailable');
+    if (repoSettings.validationError) throw new Error(repoSettings.validationError);
+    await commitRepositorySettings(currentRepoId, () => ({
+      ...(updates.defaultBaseBranch !== undefined ? { defaultBaseBranch: updates.defaultBaseBranch } : {}),
+      ...(updates.inheritGlobalAgents !== undefined ? { inheritGlobalAgents: updates.inheritGlobalAgents } : {}),
+      ...(updates.customAgentRules !== undefined ? { customAgentRules: updates.customAgentRules } : {}),
+    }), updates.revision ?? repoSettings.revision);
   },
 
   fetchRemotesDetailed: async () => {

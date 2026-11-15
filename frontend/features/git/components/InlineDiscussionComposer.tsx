@@ -1,11 +1,10 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React, { useEffect, useRef, useState } from 'react';
-import { MarkdownEditor } from '../../../common/components/MarkdownEditor';
+import { DiscussionMarkdownEditor } from '../../virtual-mr/components/discussion/DiscussionMarkdownEditor';
 import { useVirtualMrStore } from '../../virtual-mr/store/useVirtualMrStore';
 import { useGitStore } from '../store/useGitStore';
 import type { VirtualMrSession } from '../../virtual-mr/types/VirtualMrSession';
 import type { DiscussionCodeSnippet } from '../../virtual-mr/types/DiscussionCodeSnippet';
-import { getDiscussionMentionOptions } from '../../virtual-mr/utils/discussionMentions';
 import { DiscussionCodeContext } from '../../virtual-mr/components/DiscussionCodeContext';
 
 export const InlineDiscussionComposer: React.FC<{
@@ -77,7 +76,7 @@ export const InlineDiscussionComposer: React.FC<{
     >
       <DiscussionCodeContext discussion={{ filePath, diffSide: side, lineNumber, commitId, codeSnippet: snippet }} />
 
-      <MarkdownEditor
+      <DiscussionMarkdownEditor
         value={body}
         onChange={(value) => {
           setBody(value);
@@ -87,7 +86,7 @@ export const InlineDiscussionComposer: React.FC<{
         rows={6}
         minHeight="150px"
         maxHeight="500px"
-        mentionOptions={getDiscussionMentionOptions(session)}
+        session={session}
         placeholder={translateUiText('git.inlineDiscussion.placeholder')}
         showActions={false}
         onSubmit={submit}

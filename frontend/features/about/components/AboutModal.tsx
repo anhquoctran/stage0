@@ -45,7 +45,6 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       `Author: ${about.author}`,
       `Version: ${about.version}`,
       `Package Version: ${about.packageVersion}`,
-      `Git Commit: ${about.gitCommit}`,
       `Architecture: ${about.arch}`,
       `Release Date: ${about.releaseDate}`,
       `Copyright: ${about.copyright}`,
@@ -130,17 +129,12 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <span className="font-mono text-text font-medium">{about.releaseDate}</span>
           </div>
 
-          {/* Architecture & Git SHA */}
+          {/* Architecture */}
           <div className="flex items-center justify-between py-0.5 border-b border-surface0 pb-1.5 rounded-sm">
-            <span className="text-subtext0 font-medium">{translateUiText('about.architectureCommit')}</span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono bg-surface0 px-1.5 py-0.5 text-[11px] text-subtext1">
-                {about.arch}
-              </span>
-              <span className="font-mono text-subtext0 text-[11px]">
-                {about.gitCommit}
-              </span>
-            </div>
+            <span className="text-subtext0 font-medium">{translateUiText('about.architecture')}</span>
+            <span className="font-mono bg-surface0 px-1.5 py-0.5 text-[11px] text-subtext1">
+              {about.arch}
+            </span>
           </div>
 
           {/* Copyright & License */}
