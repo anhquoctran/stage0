@@ -113,3 +113,5 @@ mod feedback_tests;
 mod output_headroom_tests;
 
 mod control_discussion_tests;
+
+mod thinking_replay_fixture;

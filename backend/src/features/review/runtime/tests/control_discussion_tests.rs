@@ -312,7 +312,7 @@ async fn measured_22056_token_trace_can_finish_while_redacted_source_stays_parti
             .unwrap()
             .push(next["choices"][0]["message"]["tool_calls"][0].clone());
     }
-    let model = super::output_headroom_tests::replay_thinking(vec![
+    let model = super::thinking_replay_fixture::replay(vec![
         response(
             "update_mr_description",
             json!({"description":"Review ten changed files, with one source-policy redaction."}),

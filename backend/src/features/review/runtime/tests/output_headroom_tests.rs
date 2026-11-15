@@ -273,11 +273,3 @@ fn large_tool_batch_delta_does_not_abort_review_at_one_token_per_byte() {
         .iter()
         .any(|e| e["kind"] == "budget_exhausted"));
 }
-
-/// Additional replay scenarios share the frozen codec/floor fixture unchanged.
-pub(super) fn replay_thinking(responses: Vec<Value>) -> impl ReviewModelAdapter {
-    ThinkingTraceAdapter {
-        inner: PlanningModel::new(responses),
-        wire_bytes: None,
-    }
-}
