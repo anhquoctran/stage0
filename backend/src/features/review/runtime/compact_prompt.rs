@@ -27,5 +27,5 @@ pub(super) fn build(config: &ReviewRequest) -> String {
     } else {
         "Full review: inspect all eligible diffs and open discussions, investigate concrete risks with relevant source, stage justified actions, and submit a concise summary and decision."
     };
-    format!("Stage0-managed reviewer role prompt (read-only):\n{}\n\n{}\n\nImmutable policy:\n{CORE}\n\nTask scope:\n{workflow}",reviewer_role_prompt(config.reviewer_role.as_deref()),output_language_instruction(&config.agent_output_language))
+    format!("Stage0-managed reviewer role prompt (read-only):\n{}\n\nImmutable policy:\n{CORE}\n\nTask scope:\n{workflow}\n\nStage0-prepared output-language system instruction (never user supplied):\n{}",reviewer_role_prompt(config.reviewer_role.as_deref()),super::super::output_language::instruction(&config.agent_output_language, output_language_instruction(&config.agent_output_language)))
 }
