@@ -455,7 +455,8 @@
         "features::review::runtime::tests::output_headroom_tests::failed_run_telemetry_never_sends_a_504_token_thinking_continuation",
         "features::review::runtime::tests::output_headroom_tests::full_preload_generates_description_first_then_returns_to_full_review_with_output_headroom",
         "features::review::runtime::tests::output_headroom_tests::projected_description_phase_never_grants_coverage_or_allows_publication_before_delivery",
-        "features::review::runtime::tests::output_headroom_tests::deepseek_output_floor_tracks_thinking_without_changing_the_user_reasoning_setting"
+        "features::review::runtime::tests::output_headroom_tests::deepseek_output_floor_tracks_thinking_without_changing_the_user_reasoning_setting",
+        "features::review::runtime::tests::output_headroom_tests::large_tool_batch_delta_does_not_abort_review_at_one_token_per_byte"
       ]
     },
     {
@@ -492,6 +493,18 @@
         "features::review::runtime::tests::output_language_tests::saved_output_selection_overrides_ui_language_and_invalid_values_cannot_inject_policy",
         "features::review::runtime::tests::output_language_tests::language_annotations_reach_all_provider_protocols_without_changing_evidence_or_enums",
         "features::review::runtime::tests::output_language_tests::english_question_keeps_selected_language_across_reply_and_full_review_turns"
+      ]
+    },
+    {
+      "id": "review-control-discussions",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/control_discussion_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::control_discussion_tests::administrative_commands_are_excluded_but_real_inline_comments_and_human_followups_stay_visible",
+        "features::review::runtime::tests::control_discussion_tests::manual_review_can_approve_complete_source_without_resolving_its_own_command_or_general_comments",
+        "features::review::runtime::tests::control_discussion_tests::a_new_inline_concern_blocks_publication_atomically_even_if_previous_context_had_only_commands",
+        "features::review::runtime::tests::control_discussion_tests::control_thread_exclusion_cannot_turn_redacted_or_unread_source_into_approval",
+        "features::review::runtime::tests::control_discussion_tests::measured_22056_token_trace_can_finish_while_redacted_source_stays_partial"
       ]
     },
     {

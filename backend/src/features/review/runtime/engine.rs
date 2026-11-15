@@ -125,7 +125,7 @@ pub(super) async fn execute_with_adapter(
         .list_discussions(&run.session_id)
         .map_err(|error| error.to_string())?
         .iter()
-        .any(|discussion| !discussion.is_resolved);
+        .any(|d| !d.is_resolved && !super::super::discussion_scope::is_control(d));
     if run.snapshot.changed_files.is_empty() && !has_open_discussions {
         if run.snapshot.excluded_files.is_empty() {
             run.summary="No changed files in this snapshot. No model request was needed; no approval was recorded.".into();

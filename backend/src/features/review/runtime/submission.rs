@@ -77,7 +77,7 @@ pub(super) async fn submit_review(
         })?
     };
     if validation.is_ok() {
-        {
+        let coverage_diagnostics = {
             let ctx = context.lock().map_err(|_| {
                 crate::common::messages::failure(
                     "backend.review.contextUnavailable",
@@ -105,15 +105,19 @@ pub(super) async fn submit_review(
                 "completed"
             }
             .into();
-        }
+            json!({
+                "eligibleFileCount": run.snapshot.changed_files.len(),
+                "completeDiffFileCount": ctx.complete_diffs.len(),
+                "excludedFileCount": run.snapshot.excluded_files.len(),
+                "sourceContextLimited": ctx.limited,
+                "toolErrors": state.had_errors,
+            })
+        };
         if submitted_decision == "approve" {
-            let has_unresolved_discussions = db
-                .list_discussions(&run.session_id)
-                .map_err(|error| error.to_string())?
-                .iter()
-                .any(|discussion| {
-                    !discussion.is_resolved && !state.resolved_discussions.contains(&discussion.id)
-                });
+            let has_unresolved_discussions =
+                super::super::discussion_scope::unresolved_ids(&db.conn(), &run.session_id)?
+                    .iter()
+                    .any(|id| !state.resolved_discussions.contains(id));
             if run.status != "completed" || !run.findings.is_empty() || has_unresolved_discussions {
                 debug_log::log(format_args!(
                     "event=tool_call_rejected run={} turn={} tool=submit_review reason=approval_guard coverage_status={} findings={} unresolved_discussions={}",
@@ -144,7 +148,7 @@ pub(super) async fn submit_review(
         db.review_event(
             &run.id,
             "submitted",
-            json!({"findingCount":run.findings.len(),"discussionActions":state.pending_discussion_actions.len(),"coverage":run.status,"replySkipped":skip_reply}),
+            json!({"findingCount":run.findings.len(),"discussionActions":state.pending_discussion_actions.len(),"coverage":run.status,"replySkipped":skip_reply,"coverageDiagnostics":coverage_diagnostics}),
         )?;
         debug_log::log(format_args!(
             "event=review_submitted run={} decision={} status={} findings={} discussion_actions={} inspected_files={} context_bytes={}",

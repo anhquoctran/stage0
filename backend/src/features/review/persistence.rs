@@ -271,18 +271,15 @@ impl Database {
                 }
             }
         }
+        let unresolved_count = super::discussion_scope::unresolved_ids(&tx, &run.session_id)?.len();
+        if run.decision.as_deref() == Some("approve") && unresolved_count > 0 {
+            return Err("Approval requires no unresolved review discussions at publication".into());
+        }
         if let Some(reviewer_id) = run
             .reviewer_id
             .as_deref()
             .filter(|_| run.reply_discussion_id.is_none())
         {
-            let unresolved_count: i64 = tx
-                .query_row(
-                    "SELECT COUNT(*) FROM virtual_mr_discussions WHERE session_id=?1 AND is_resolved=0",
-                    [&run.session_id],
-                    |row| row.get(0),
-                )
-                .map_err(|e| e.to_string())?;
             let reviewer_status = if run.status == "completed"
                 && run.decision.as_deref() == Some("approve")
                 && run.findings.is_empty()
