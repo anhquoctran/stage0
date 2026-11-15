@@ -6,7 +6,7 @@ use crate::features::review::{
     context::ReviewContext, model_adapter::ReviewModelAdapter, tool_registry::ReviewToolRegistry,
     ReviewRequest, ReviewRetryState, ReviewRun,
 };
-use crate::features::review::{debug_log, mentions};
+use crate::features::review::{debug_log, mentions, output_language};
 use serde_json::json;
 use std::{
     sync::{Arc, Mutex},
@@ -110,6 +110,7 @@ pub(super) async fn execute_with_adapter(
         registry.enable_related_context();
     }
     super::feedback_actions::configure(db, run, context, &mut registry, &mut initial, &mut system)?;
+    registry.apply_output_language(&config.agent_output_language);
     let tools = registry.definitions();
     let mut wire_bytes = 0usize;
     let mut recovered_missing_tool_call = false;
@@ -148,6 +149,7 @@ pub(super) async fn execute_with_adapter(
         ));
         return Ok(());
     }
+    output_language::record(db, run, config, &mut initial)?;
     let (mut history, mut initial_diff) =
         super::initial_context::prepare(context, adapter, &system, &initial, tools, reply_only)
             .await?;

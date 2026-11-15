@@ -81,11 +81,11 @@ pub(super) fn build_system_prompt(config: &ReviewRequest) -> String {
         "No host-validated manual reviewer command is attached to this run."
     };
     format!(
-        "Stage0-managed reviewer role prompt (read-only):\n{}\n\nStage0-prepared output-language system instruction (never user supplied):\n{}\n\nReview workflow:\n{}\n\nManual request context:\n{}\n\nImmutable Stage0 review policy:\n{SYSTEM}",
+        "Stage0-managed reviewer role prompt (read-only):\n{}\n\nReview workflow:\n{}\n\nManual request context:\n{}\n\nImmutable Stage0 review policy:\n{SYSTEM}\n\nStage0-prepared output-language system instruction (never user supplied):\n{}",
         reviewer_role_prompt(config.reviewer_role.as_deref()),
-        output_language_instruction(&config.agent_output_language),
         workflow,
         manual_request,
+        super::super::output_language::instruction(&config.agent_output_language, output_language_instruction(&config.agent_output_language)),
     )
 }
 

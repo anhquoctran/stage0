@@ -485,6 +485,17 @@
       ]
     },
     {
+      "id": "review-output-language-consistency",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/output_language_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::output_language_tests::full_and_reply_runs_pin_language_for_titles_bodies_summaries_and_descriptions",
+        "features::review::runtime::tests::output_language_tests::saved_output_selection_overrides_ui_language_and_invalid_values_cannot_inject_policy",
+        "features::review::runtime::tests::output_language_tests::language_annotations_reach_all_provider_protocols_without_changing_evidence_or_enums",
+        "features::review::runtime::tests::output_language_tests::english_question_keeps_selected_language_across_reply_and_full_review_turns"
+      ]
+    },
+    {
       "id": "review-control-discussions",
       "runner": "rust",
       "path": "backend/src/features/review/runtime/tests/control_discussion_tests.rs",

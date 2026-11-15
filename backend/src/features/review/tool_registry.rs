@@ -33,7 +33,11 @@ impl ReviewToolRegistry {
                 }
             }
         }
+        registry.apply_output_language(&config.agent_output_language);
         registry
+    }
+    pub(crate) fn apply_output_language(&mut self, language: &str) {
+        super::output_language::annotate(&mut self.native, language);
     }
     pub(crate) fn enable_feedback(&mut self) {
         self.native.extend(super::feedback::tools::definitions());
