@@ -223,3 +223,53 @@ fn deepseek_output_floor_tracks_thinking_without_changing_the_user_reasoning_set
         "disabled"
     );
 }
+
+#[test]
+fn large_tool_batch_delta_does_not_abort_review_at_one_token_per_byte() {
+    use super::super::{request_budget::RequestBudget, tool_state::ReviewToolState};
+    let repo = TestRepo::new();
+    let (mut run, _) = repo.review();
+    let db = test_database(&run);
+    db.save_review_run(&run).unwrap();
+    run.usage_tokens = 22056;
+    let model = ThinkingTraceAdapter {
+        inner: PlanningModel::new(vec![]),
+        wire_bytes: Some(71320),
+    };
+    let mut budget = RequestBudget::default();
+    budget
+        .observe(
+            &db,
+            &run,
+            &model,
+            &response("list_open_discussions", json!({"offset":0}), 10589, 3548),
+            41639,
+        )
+        .unwrap();
+    let mut state = ReviewToolState::new(true);
+    state.description_updated = true;
+    let mut history = model.initial_history("Synthetic tool-batch continuation");
+    let registry =
+        crate::features::review::tool_registry::ReviewToolRegistry::native_for_review(true);
+    let (_body, output) = budget
+        .prepare(
+            &db,
+            &run,
+            &model,
+            "Immutable source policy",
+            &mut history,
+            registry.definitions(),
+            16384,
+            64000,
+            &mut state,
+            true,
+        )
+        .unwrap();
+    assert_eq!(output, 16384);
+    assert!(budget.finalizing);
+    assert!(!db
+        .review_events(&run.id)
+        .unwrap()
+        .iter()
+        .any(|e| e["kind"] == "budget_exhausted"));
+}

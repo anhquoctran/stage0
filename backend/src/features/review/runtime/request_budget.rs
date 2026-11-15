@@ -103,12 +103,20 @@ impl RequestBudget {
     fn estimate(&self, bytes: usize) -> Option<u64> {
         let input = self.observed_input?;
         if bytes >= self.observed_bytes {
-            // New Unicode/source/reasoning may tokenize more densely than old context.
-            Some(
+            let delta = bytes.saturating_sub(self.observed_bytes) as u64;
+            let scaled = if self.observed_bytes > 0 {
                 input
-                    .saturating_add(bytes.saturating_sub(self.observed_bytes) as u64)
-                    .saturating_add(256),
-            )
+                    .saturating_mul(bytes as u64)
+                    .div_ceil(self.observed_bytes as u64)
+            } else {
+                0
+            };
+            // Reserve 1:1 on the first 4 KiB delta for dense framing/Unicode, then scale
+            // larger tool/diff batches at <= 3 bytes/token (or observed density if denser).
+            let delta_estimate = input
+                .saturating_add(delta.min(4096))
+                .saturating_add(delta.saturating_sub(4096).div_ceil(3));
+            Some(scaled.max(delta_estimate).saturating_add(256))
         } else {
             // Dropping schemas reduces framing too. This is an estimate, never billing.
             Some(
