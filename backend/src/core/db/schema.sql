@@ -177,6 +177,7 @@ CREATE INDEX IF NOT EXISTS idx_vmr_discussion_activity_session ON virtual_mr_dis
 
 CREATE INDEX IF NOT EXISTS idx_vmr_repo ON virtual_mr_sessions(repo_id);
 CREATE INDEX IF NOT EXISTS idx_vmr_repo_updated ON virtual_mr_sessions(repo_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_vmr_ref_tracking ON virtual_mr_sessions(repo_id,base_branch,compare_branch,status);
 CREATE INDEX IF NOT EXISTS idx_labels_repo ON repo_labels(repo_id);
 CREATE INDEX IF NOT EXISTS idx_labels_repo_name ON repo_labels(repo_id, name ASC);
 CREATE INDEX IF NOT EXISTS idx_vmr_session_labels_session ON virtual_mr_session_labels(session_id);
@@ -205,6 +206,59 @@ CREATE TABLE IF NOT EXISTS ai_review_events (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_review_events_run ON ai_review_events(run_id, seq);
+
+-- Local Git revision state, independent of immutable historical review runs.
+CREATE TABLE IF NOT EXISTS virtual_mr_ref_state (
+    session_id TEXT PRIMARY KEY REFERENCES virtual_mr_sessions(id) ON DELETE CASCADE,
+    base_branch TEXT NOT NULL,
+    compare_branch TEXT NOT NULL,
+    base_sha TEXT,
+    head_sha TEXT,
+    revision INTEGER NOT NULL DEFAULT 1,
+    needs_review INTEGER NOT NULL DEFAULT 1 CHECK(needs_review IN (0,1)),
+    view_digest TEXT NOT NULL DEFAULT '',
+    ref_status TEXT NOT NULL CHECK(ref_status IN ('ready','unavailable'))
+);
+
+-- Cheap invalidation tokens for revision-monitor caches, scoped to a repository.
+CREATE TABLE IF NOT EXISTS virtual_mr_sync_epochs (
+    repo_id TEXT PRIMARY KEY,
+    revision INTEGER NOT NULL DEFAULT 1
+);
+CREATE TRIGGER IF NOT EXISTS mr_sync_session_insert AFTER INSERT ON virtual_mr_sessions BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) VALUES(NEW.repo_id)
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_session_update AFTER UPDATE OF repo_id,base_branch,compare_branch,status ON virtual_mr_sessions
+WHEN NEW.repo_id!=OLD.repo_id OR NEW.base_branch!=OLD.base_branch OR NEW.compare_branch!=OLD.compare_branch OR NEW.status!=OLD.status BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) VALUES(NEW.repo_id)
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_session_delete AFTER DELETE ON virtual_mr_sessions BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) VALUES(OLD.repo_id)
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_reviewer_insert AFTER INSERT ON virtual_mr_session_reviewers BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) SELECT repo_id FROM virtual_mr_sessions WHERE id=NEW.session_id
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_reviewer_update AFTER UPDATE OF review_status ON virtual_mr_session_reviewers
+WHEN NEW.review_status!=OLD.review_status BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) SELECT repo_id FROM virtual_mr_sessions WHERE id=NEW.session_id
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_reviewer_delete AFTER DELETE ON virtual_mr_session_reviewers BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) SELECT repo_id FROM virtual_mr_sessions WHERE id=OLD.session_id
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_review_progress AFTER UPDATE OF needs_review ON virtual_mr_ref_state
+WHEN NEW.needs_review!=OLD.needs_review BEGIN
+    INSERT INTO virtual_mr_sync_epochs(repo_id) SELECT repo_id FROM virtual_mr_sessions WHERE id=NEW.session_id
+    ON CONFLICT(repo_id) DO UPDATE SET revision=revision+1;
+END;
+CREATE TRIGGER IF NOT EXISTS mr_sync_repository_delete AFTER DELETE ON repositories BEGIN
+    DELETE FROM virtual_mr_sync_epochs WHERE repo_id=OLD.id;
+END;
 
 CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,

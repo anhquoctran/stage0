@@ -1161,6 +1161,11 @@
       "duplicateExists": "An open Virtual MR already exists for {{sourceToTarget}}: “{{title}}”. Open it from the Merge Requests list.",
       "reviewerLabelsSaveFailed": "Could not save MR reviewers or labels. Please try again.",
       "resolveOpenDiscussions": "Resolve open code discussions before starting another AI review. Open: {{count}}."
+    },
+    "sync": {
+      "needsReview": "बदलावों की समीक्षा आवश्यक है। नई समीक्षा में नवीनतम कमिट किया गया कोड उपयोग होगा।",
+      "unavailable": "एक शाखा स्थानीय रूप से उपलब्ध नहीं है। इस MR को अपडेट करने के लिए उसे फ़ेच या पुनर्स्थापित करें।",
+      "historical": "यह समीक्षा किसी पुराने संस्करण से संबंधित है।"
     }
   },
   "onboarding": {

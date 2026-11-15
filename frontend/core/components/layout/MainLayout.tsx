@@ -13,6 +13,7 @@ import { VirtualMrReviewsTab } from '../../../features/virtual-mr/components/hub
 import { NewVirtualMrView } from '../../../features/virtual-mr/components/NewVirtualMrView';
 import { VirtualMrBottomBar } from '../../../features/virtual-mr/components/VirtualMrBottomBar';
 import { VirtualMrHub } from '../../../features/virtual-mr/components/VirtualMrHub';
+import { MrSyncRuntimeBridge } from '../../../features/virtual-mr/components/MrSyncRuntimeBridge';
 import { VirtualMrListDialog } from '../../../features/virtual-mr/components/VirtualMrListDialog';
 import { useVirtualMrStore } from '../../../features/virtual-mr/store/useVirtualMrStore';
 import { useWindowChromeStore } from '../../store/useWindowChromeStore';
@@ -69,6 +70,7 @@ export const MainLayout: React.FC = () => {
       isCustomMacFrame ? 'rounded-sm' : 'rounded-none',
     )}>
       {/* Top Application Bar with Menu Bar & Action Toolbar */}
+      <MrSyncRuntimeBridge />
       <TopBar />
 
       {/* Multi-Session Virtual MR TabBar */}

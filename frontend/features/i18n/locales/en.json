@@ -1161,6 +1161,11 @@
       "duplicateExists": "An open Virtual MR already exists for {{sourceToTarget}}: “{{title}}”. Open it from the Merge Requests list.",
       "reviewerLabelsSaveFailed": "Could not save MR reviewers or labels. Please try again.",
       "resolveOpenDiscussions": "Resolve open code discussions before starting another AI review. Open: {{count}}."
+    },
+    "sync": {
+      "needsReview": "Changes need review. A new review uses the latest committed code.",
+      "unavailable": "A branch is unavailable locally. Fetch or restore it to update this MR.",
+      "historical": "This review refers to an earlier revision."
     }
   },
   "onboarding": {

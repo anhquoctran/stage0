@@ -244,6 +244,7 @@ pub fn run() {
 
             notifications::initialize(handle);
             features::updates::start_background_checks(handle);
+            features::virtual_mr::sync::start(handle);
 
             #[cfg(target_os = "macos")]
             {

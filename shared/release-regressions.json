@@ -506,6 +506,53 @@
         "features::review::runtime::tests::control_discussion_tests::control_thread_exclusion_cannot_turn_redacted_or_unread_source_into_approval",
         "features::review::runtime::tests::control_discussion_tests::measured_22056_token_trace_can_finish_while_redacted_source_stays_partial"
       ]
+    },
+    {
+      "id": "mr-auto-sync-window",
+      "runner": "node",
+      "path": "scripts/mr-auto-sync.test.mjs"
+    },
+    {
+      "id": "mr-auto-sync-queue",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/sync/tests/queue_tests.rs",
+      "tests": [
+        "features::virtual_mr::sync::tests::queue_tests::queue_coalesces_storms_without_starving_other_repositories_or_losing_inflight_changes",
+        "features::virtual_mr::sync::tests::queue_tests::foreground_priority_and_backoff_are_bounded_and_removed_repositories_are_forgotten"
+      ]
+    },
+    {
+      "id": "mr-auto-sync-git",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/sync/tests/git_tests.rs",
+      "tests": [
+        "features::virtual_mr::sync::tests::git_tests::batch_resolution_matches_review_refs_including_remote_fallbacks_and_packed_refs",
+        "features::virtual_mr::sync::tests::git_tests::gitdir_indirection_and_metadata_filters_do_not_watch_source_or_object_contents",
+        "features::virtual_mr::sync::tests::git_tests::native_metadata_watcher_observes_a_commit_created_outside_stage0",
+        "features::virtual_mr::sync::tests::git_tests::shared_native_watches_keep_other_subscribers_alive_after_one_is_removed"
+      ]
+    },
+    {
+      "id": "mr-auto-sync-state",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/sync/tests/state_tests.rs",
+      "tests": [
+        "features::virtual_mr::sync::tests::state_tests::committed_ref_changes_update_all_matching_mrs_without_touching_history_or_checkout",
+        "features::virtual_mr::sync::tests::state_tests::unsaved_and_uncommitted_edits_do_not_change_revision_but_deleted_refs_fail_closed",
+        "features::virtual_mr::sync::tests::state_tests::stale_metadata_cannot_restore_approval_and_obsolete_jobs_cannot_rewrite_changed_branches",
+        "features::virtual_mr::sync::tests::state_tests::a_fresh_completed_review_clears_staleness_and_metadata_revisions_remain_monotonic",
+        "features::virtual_mr::sync::tests::state_tests::offline_repositories_invalidate_old_verdicts_and_recover_without_rewriting_discussions",
+        "features::virtual_mr::sync::tests::state_tests::cached_ref_checks_are_invalidated_by_reviewer_changes_but_not_other_repositories",
+        "features::virtual_mr::sync::tests::state_tests::schema_upgrade_is_idempotent_and_repository_deletion_cleans_sync_data"
+      ]
+    },
+    {
+      "id": "mr-auto-sync-scale",
+      "runner": "rust",
+      "path": "backend/src/features/virtual_mr/sync/tests/scale_tests.rs",
+      "tests": [
+        "features::virtual_mr::sync::tests::scale_tests::a_thousand_mrs_share_batched_git_reads_and_unchanged_scans_do_not_write_sqlite"
+      ]
     }
   ]
 }

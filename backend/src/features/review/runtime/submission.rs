@@ -77,35 +77,42 @@ pub(super) async fn submit_review(
         })?
     };
     if validation.is_ok() {
-        let ctx = context.lock().map_err(|_| {
-            crate::common::messages::failure(
-                "backend.review.contextUnavailable",
-                serde_json::json!({}),
-                "Review context unavailable".into(),
-            )
-        })?;
-        run.findings = findings;
-        run.summary = security::redact(call.arguments["summary"].as_str().unwrap());
-        run.decision = Some(submitted_decision.clone());
-        run.inspected_files = ctx.inspected.iter().cloned().collect();
-        run.context_bytes = ctx.bytes;
-        run.status = if state.had_errors
-            || ctx.limited
-            || (state.reply_discussion_id.is_none()
-                && (!run.snapshot.excluded_files.is_empty()
-                    || run
-                        .snapshot
-                        .changed_files
-                        .iter()
-                        .any(|path| !ctx.complete_diffs.contains(path))))
-        {
-            "partial"
-        } else {
-            "completed"
-        }
-        .into();
-        let coverage_diagnostics = json!({"eligibleFileCount":run.snapshot.changed_files.len(),"completeDiffFileCount":ctx.complete_diffs.len(),"excludedFileCount":run.snapshot.excluded_files.len(),"sourceContextLimited":ctx.limited,"toolErrors":state.had_errors});
-        drop(ctx);
+        let coverage_diagnostics = {
+            let ctx = context.lock().map_err(|_| {
+                crate::common::messages::failure(
+                    "backend.review.contextUnavailable",
+                    serde_json::json!({}),
+                    "Review context unavailable".into(),
+                )
+            })?;
+            run.findings = findings;
+            run.summary = security::redact(call.arguments["summary"].as_str().unwrap());
+            run.decision = Some(submitted_decision.clone());
+            run.inspected_files = ctx.inspected.iter().cloned().collect();
+            run.context_bytes = ctx.bytes;
+            run.status = if state.had_errors
+                || ctx.limited
+                || (state.reply_discussion_id.is_none()
+                    && (!run.snapshot.excluded_files.is_empty()
+                        || run
+                            .snapshot
+                            .changed_files
+                            .iter()
+                            .any(|path| !ctx.complete_diffs.contains(path))))
+            {
+                "partial"
+            } else {
+                "completed"
+            }
+            .into();
+            json!({
+                "eligibleFileCount": run.snapshot.changed_files.len(),
+                "completeDiffFileCount": ctx.complete_diffs.len(),
+                "excludedFileCount": run.snapshot.excluded_files.len(),
+                "sourceContextLimited": ctx.limited,
+                "toolErrors": state.had_errors,
+            })
+        };
         if submitted_decision == "approve" {
             let has_unresolved_discussions =
                 super::super::discussion_scope::unresolved_ids(&db.conn(), &run.session_id)?
@@ -134,6 +141,7 @@ pub(super) async fn submit_review(
             run.published = false;
             db.save_review_run(run)?;
         } else {
+            super::review_actions::verify_current_snapshot(db, run).await?;
             db.publish_review_actions(run, &state.pending_discussion_actions)?;
             run.published = true;
         }

@@ -366,6 +366,7 @@ pub async fn publish_ai_review(app: AppHandle, run_id: String) -> Result<(), Str
         let db=worker_app.state::<Database>();let run=db.get_review_run(&run_id)?;
         let (repo,base,head,title)={let conn=db.conn();conn.query_row("SELECT r.local_path,s.base_branch,s.compare_branch,s.title FROM virtual_mr_sessions s JOIN repositories r ON r.id=s.repo_id WHERE s.id=?1",[&run.session_id],|r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,String>(3)?))).map_err(|_| crate::common::messages::code("backend.virtualMr.sessionNotFound"))?};
         if repo!=run.snapshot.repo_path||super::context::resolve_snapshot_ref(&repo,&base)?!=run.snapshot.base_sha||super::context::resolve_snapshot_ref(&repo,&head)?!=run.snapshot.head_sha{return Err(crate::common::messages::code("backend.review.snapshotStale"));}
+        crate::features::virtual_mr::sync::verify_review(&db,&run)?;
         let guards = Arc::new(GuardrailsEngine::new());
         let context = super::context::ReviewContext::new(run.snapshot.clone(), guards);
         context.validate_findings(&run.findings)?;

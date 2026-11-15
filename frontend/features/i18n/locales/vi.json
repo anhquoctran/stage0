@@ -1161,6 +1161,11 @@
       "duplicateExists": "Đã có MR ảo đang mở cho {{sourceToTarget}}: “{{title}}”. Hãy mở MR này từ danh sách yêu cầu hợp nhất.",
       "reviewerLabelsSaveFailed": "Không thể lưu reviewer hoặc nhãn của MR. Hãy thử lại.",
       "resolveOpenDiscussions": "Hãy xử lý mọi thảo luận mã còn mở trước khi bắt đầu lượt review AI mới. Còn mở: {{count}}."
+    },
+    "sync": {
+      "needsReview": "Các thay đổi cần được review. Lượt review mới sẽ dùng code đã commit mới nhất.",
+      "unavailable": "Một nhánh hiện không có trên máy. Hãy fetch hoặc khôi phục nhánh để cập nhật MR này.",
+      "historical": "Lượt review này dựa trên một phiên bản code trước đó."
     }
   },
   "onboarding": {

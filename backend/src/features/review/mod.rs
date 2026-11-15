@@ -41,4 +41,4 @@ mod fixture_acp_adapter;
 #[cfg(test)]
 mod fixture_cli_adapter;
 #[cfg(test)]
-mod test_repo;
+pub(crate) mod test_repo;

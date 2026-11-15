@@ -3,6 +3,36 @@ use crate::features::review::{context::ReviewContext, ReviewFinding, ReviewRun};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
+pub(super) async fn verify_current_snapshot(db: &Database, run: &ReviewRun) -> Result<(), String> {
+    let (base, head) = {
+        let conn = db.conn();
+        conn.query_row(
+            "SELECT base_branch,compare_branch FROM virtual_mr_sessions WHERE id=?1",
+            [&run.session_id],
+            |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+        )
+        .map_err(|e| e.to_string())?
+    };
+    let (root, expected_base, expected_head) = (
+        run.snapshot.repo_path.clone(),
+        run.snapshot.base_sha.clone(),
+        run.snapshot.head_sha.clone(),
+    );
+    let (check_base, check_head) = (base.clone(), head.clone());
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::features::virtual_mr::sync::check_refs(
+            &root,
+            &check_base,
+            &check_head,
+            &expected_base,
+            &expected_head,
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    crate::features::virtual_mr::sync::observe_review(db, run, &base, &head)
+}
+
 pub(super) async fn update_mr_description(
     db: &Database,
     run: &ReviewRun,
