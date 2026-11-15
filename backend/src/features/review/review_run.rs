@@ -57,6 +57,7 @@ impl ReviewRun {
                     "backend.review.deadlineExceeded"
                         | "backend.review.tokenBudgetExceeded"
                         | "backend.review.tokenBudgetExceededDetails"
+                        | "backend.review.tokenBudgetCannotContinue"
                         | "backend.review.requestBudgetExceeded"
                         | "backend.review.wireBudgetExceeded"
                         | "backend.review.toolCallBudgetExceeded"

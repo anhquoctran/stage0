@@ -61,7 +61,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     ? mentionOptions.filter((item) => {
         if (mentionQuery.trigger === '!') return item.kind === 'mr' && item.id.toLowerCase().startsWith(mentionQuery.query);
         if (mentionQuery.trigger === '#') return item.kind === 'commit' && item.id.toLowerCase().startsWith(mentionQuery.query);
-        return `${item.label} ${item.id} ${item.description ?? ''}`.toLocaleLowerCase().includes(mentionQuery.query);
+        return (item.kind === 'reviewer' || item.kind === 'assignee')
+          && `${item.label} ${item.id} ${item.description ?? ''}`.toLocaleLowerCase().includes(mentionQuery.query);
       }).slice(0, 50)
     : [];
   useEffect(() => {

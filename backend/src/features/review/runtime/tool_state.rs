@@ -5,6 +5,8 @@ use std::collections::{HashMap, HashSet};
 /// Mutable state for a single bounded review run; actions remain staged until submission.
 pub(super) struct ReviewToolState {
     pub had_errors: bool,
+    pub finalizing: bool,
+    pub workflow_phase: Option<&'static str>,
     pub pending_findings: Vec<ReviewFinding>,
     pub pending_discussion_actions: Vec<ReviewDiscussionAction>,
     pub description_updated: bool,
@@ -22,6 +24,8 @@ impl ReviewToolState {
     pub fn new(generate_description: bool) -> Self {
         Self {
             had_errors: false,
+            finalizing: false,
+            workflow_phase: None,
             pending_findings: Vec::new(),
             pending_discussion_actions: Vec::new(),
             description_updated: !generate_description,

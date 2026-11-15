@@ -56,9 +56,16 @@ pub(super) fn list(
                     .is_none_or(|id| id == &d.id)
         })
         .collect::<Vec<_>>();
-    let end = offset.saturating_add(2).min(open.len());
+    let page_bytes = (16 * 1024).min(
+        context
+            .lock()
+            .map_err(|_| "Review context unavailable")?
+            .external_output_budget(),
+    );
+    let page_end = offset.saturating_add(8).min(open.len());
+    let mut end = offset;
     let mut threads = Vec::new();
-    for discussion in open.get(offset..end).unwrap_or_default() {
+    for discussion in open.get(offset..page_end).unwrap_or_default() {
         let root = discussion.comments.first();
         let latest = discussion.comments.last();
         let comments = discussion
@@ -76,10 +83,17 @@ pub(super) fn list(
             run.reviewer_id.as_deref(),
             &discussion.id,
         );
-        threads.push(json!({"id":discussion.id,"filePath":discussion.file_path,"side":discussion.diff_side,
+        let thread = json!({"id":discussion.id,"filePath":discussion.file_path,"side":discussion.diff_side,
             "lineNumber":discussion.line_number,"commitId":discussion.commit_id,"canReply":can_reply,
             "discussionRevision":discussion_revision::of(discussion),"targetCommentId":latest.map(|c| &c.id),
-            "rootCommentId":root.map(|c| &c.id),"commentCount":discussion.comments.len(),"comments":comments}));
+            "rootCommentId":root.map(|c| &c.id),"commentCount":discussion.comments.len(),"comments":comments});
+        threads.push(thread);
+        let candidate = json!({"threads":threads,"totalOpen":open.len(),"nextOffset":if end+1 < open.len(){Some(end+1)}else{None}});
+        if threads.len() > 1 && candidate.to_string().len() > page_bytes {
+            threads.pop();
+            break;
+        }
+        end += 1;
     }
     let value = context.lock().map_err(|_| crate::common::messages::failure("backend.review.contextUnavailable", serde_json::json!({}), "Review context unavailable".into()))?.deliver_external("list_open_discussions",
         json!({"threads":threads,"totalOpen":open.len(),"nextOffset":if end < open.len(){Some(end)}else{None}}))?;

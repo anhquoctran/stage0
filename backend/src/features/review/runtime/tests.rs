@@ -107,4 +107,7 @@ mod policy;
 mod reply_ownership_tests;
 mod truncation;
 
+mod continuation_tests;
+mod discussion_batch_tests;
 mod feedback_tests;
+mod output_headroom_tests;
