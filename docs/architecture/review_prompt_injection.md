@@ -104,10 +104,16 @@ MR description/verdict update or success notification is produced. Failures and
 incomplete checks still notify. Completed no-reply checks share the same bounded
 comment-version cache as replies, preventing repeated work on unchanged mentions.
 
-The exact root body `[@Assigned reviewer](#mr-mention/reviewer/<encoded-id>) review`
-is a separate host workflow. The frontend recognizes the editor-generated
-Markdown mention, checks that bot's unresolved code discussions and starts one
-full run for that bot only. The runtime prompt treats this as normal full-review
+The exact root body `[@Bot1](#mr-mention/reviewer/id1) [@Bot2](#mr-mention/reviewer/id2) review`
+is a separate host workflow. One or more reviewer mentions are accepted, separated
+by spaces/tabs and followed by a single `review` suffix. Duplicate IDs run once;
+quoted/code mentions, assignees, extra prose and malformed links are rejected.
+The frontend reserves one MR batch and runs explicitly named bots sequentially,
+checking each bot's assignment, configuration, consent and unresolved code findings.
+A blocked or failed bot does not suppress eligible peers. The backend independently
+checks the original human root command and the selected bot's identity/findings
+for every run. Full-review commands in reply comments never start full reviews or
+model relevance checks; ordinary substantive mentions still use the reply workflow. The runtime prompt treats this as normal full-review
 intent; it grants no extra authority. Backend reply eligibility marks the exact
 command as host-managed so model-generated reply actions cannot race with the
 host's progress and completion replies. Other discussion bodies retain the

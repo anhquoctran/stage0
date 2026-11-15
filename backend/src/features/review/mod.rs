@@ -12,6 +12,7 @@ pub(crate) mod discussion_snippets;
 pub mod feedback;
 mod input_screen;
 pub mod local_context;
+mod manual_command;
 mod mentions;
 pub mod model_adapter;
 mod model_failure;

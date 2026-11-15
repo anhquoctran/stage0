@@ -34,6 +34,17 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pendingMentionCaret = useRef<{ value: string; caret: number } | null>(null);
+  // Ref attachment runs after the controlled value commits, before another
+  // input event. A delayed animation frame could overwrite the user's caret.
+  const attachTextarea = (textarea: HTMLTextAreaElement | null) => {
+    textareaRef.current = textarea;
+    const pending = pendingMentionCaret.current;
+    if (!textarea || !pending || textarea.value !== pending.value) return;
+    pendingMentionCaret.current = null;
+    textarea.setSelectionRange(pending.caret, pending.caret);
+    textarea.focus();
+  };
   const mentionListId = useId();
   const [mentionCaret, setMentionCaret] = useState(0);
   const [isMentionFocused, setIsMentionFocused] = useState(false);
@@ -76,13 +87,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const after = value.slice(mentionQuery.end);
     const separator = /^[\s.,;:!?)]/.test(after) ? '' : ' ';
     const nextCaret = mentionQuery.start + inserted.length + separator.length;
-    onChange(`${value.slice(0, mentionQuery.start)}${inserted}${separator}${after}`);
+    const nextValue = `${value.slice(0, mentionQuery.start)}${inserted}${separator}${after}`;
+    pendingMentionCaret.current = { value: nextValue, caret: nextCaret };
+    onChange(nextValue);
     setIsMentionFocused(false);
     setMentionCaret(nextCaret);
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(nextCaret, nextCaret);
-    });
+    setSelectionRange({ start: nextCaret, end: nextCaret });
   };
 
   const insertMarkdown = (prefix: string, suffix = '', defaultText = '') => {
@@ -199,10 +209,11 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         {activeTab === 'write' ? (
           <>
             <textarea
-              ref={textareaRef}
+              ref={attachTextarea}
               rows={rows}
               value={value}
               onChange={(e) => {
+                pendingMentionCaret.current = null;
                 onChange(e.target.value);
                 setMentionCaret(e.target.selectionStart);
                 setSelectionRange({

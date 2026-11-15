@@ -2806,7 +2806,8 @@
     },
     "memory": {
       "title": "Memória de revisão",
-      "description": "Recusas claras são aprendidas na próxima resposta ou revisão. Memórias relevantes são compartilhadas entre revisores e provedores deste repositório.",
+      "repositoryScope": "Este repositório",
+      "description": "Mencione um bot em uma discussão para pedir que ele lembre uma preferência concreta do repositório. Você pode esclarecê-la nas respostas. As memórias são compartilhadas entre provedores neste repositório.",
       "empty": "Nenhum comentário memorizado.",
       "forget": "Esquecer este comentário",
       "error": "Não foi possível carregar ou atualizar a memória de revisão.",

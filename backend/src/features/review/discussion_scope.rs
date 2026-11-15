@@ -4,30 +4,10 @@ use crate::features::virtual_mr::persistence::VirtualMrDiscussionDb;
 use rusqlite::Connection;
 
 fn control_root(path: Option<&str>, kind: &str, body: &str, has_non_bot_reply: bool) -> bool {
-    if path.is_some()
-        || kind != "user"
-        || has_non_bot_reply
-        || !mentions::is_manual_review_command(body)
-    {
-        return false;
-    }
-    // Require a single mention, not an ordinary comment ending with another bot command.
-    let Some((label, _)) = body.trim().rsplit_once("](") else {
-        return false;
-    };
-    let mut escaped = false;
-    for ch in label[2..].chars() {
-        if escaped {
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-        } else if matches!(ch, '[' | ']') {
-            return false;
-        }
-    }
-    !escaped
+    path.is_none()
+        && kind == "user"
+        && !has_non_bot_reply
+        && mentions::is_manual_review_command(body)
 }
 
 pub(crate) fn is_control(thread: &VirtualMrDiscussionDb) -> bool {

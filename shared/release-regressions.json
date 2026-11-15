@@ -553,6 +553,45 @@
       "tests": [
         "features::virtual_mr::sync::tests::scale_tests::a_thousand_mrs_share_batched_git_reads_and_unchanged_scans_do_not_write_sqlite"
       ]
+    },
+    {
+      "id": "markdown-mention-caret",
+      "runner": "node",
+      "path": "scripts/markdown-mention-caret.test.mjs"
+    },
+    {
+      "id": "multi-review-command",
+      "runner": "node",
+      "path": "scripts/multi-review-command.test.mjs"
+    },
+    {
+      "id": "multi-review-command-admission",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/multi_reviewer_command_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::multi_reviewer_command_tests::root_command_parser_matches_the_frontend_fixture_and_rejects_ordinary_or_malformed_mentions",
+        "features::review::runtime::tests::multi_reviewer_command_tests::multi_bot_root_commands_require_each_assignment_and_each_bots_findings_to_be_resolved"
+      ]
+    },
+    {
+      "id": "review-conversation-memory-storage",
+      "runner": "rust",
+      "path": "backend/src/features/review/feedback/conversation_tests.rs",
+      "tests": [
+        "features::review::feedback::conversation_tests::conversation_teaching_is_durable_repository_scoped_and_tracks_the_human_confirmed_context",
+        "features::review::feedback::conversation_tests::teaching_requires_addressed_human_feedback_and_preserves_legacy_forget_tombstones",
+        "features::review::feedback::conversation_tests::teaching_rechecks_repository_assignment_history_limits_and_atomic_audit"
+      ]
+    },
+    {
+      "id": "review-conversation-memory-runtime",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/teaching_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::teaching_tests::native_and_acp_can_remember_and_acknowledge_human_confirmed_preferences_in_a_reply_run",
+        "features::review::runtime::tests::teaching_tests::classification_requires_every_conversation_page_and_rejects_stale_or_incomplete_history",
+        "features::review::runtime::tests::teaching_tests::an_ambiguous_turn_can_ask_for_clarification_then_remember_the_humans_scoped_confirmation"
+      ]
     }
   ]
 }

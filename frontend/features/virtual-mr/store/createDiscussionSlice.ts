@@ -5,7 +5,7 @@ import { type VirtualMrDiscussion } from '../types/VirtualMrDiscussion';
 import { type DiscussionCodeSnippet } from '../types/DiscussionCodeSnippet';
 import { type ReviewActionType } from '../types/ReviewActionType';
 import { fromDbDiscussion } from '../utils/fromDbDiscussion';
-import { parseReviewerReviewCommand } from '../utils/parseReviewerReviewCommand';
+import { parseReviewerReviewCommands } from '../utils/parseReviewerReviewCommand';
 import { AI_REVIEW_UNAVAILABLE } from '../../ai/constants/runtimeAvailability';
 import type { VirtualMrState } from '../types/VirtualMrState';
 import { refreshCommentPermissions } from './refreshCommentPermissions';
@@ -116,10 +116,11 @@ export const createDiscussionSlice = (
     }));
     await get().invalidateReviewerApprovals(sessionId);
     await refreshCommentPermissions(sessionId, set, get);
-    const reviewerId = parseReviewerReviewCommand(payload.initialComment);
-    if (reviewerId) {
+    const reviewerIds = payload.filePath == null
+      ? parseReviewerReviewCommands(payload.initialComment) : [];
+    if (reviewerIds.length) {
       void import('../../review/services/manualReviewerRequestService')
-        .then(({ requestManualReviewerReview }) => requestManualReviewerReview(sessionId, discId, reviewerId))
+        .then(({ requestManualReviewerReviews }) => requestManualReviewerReviews(sessionId, discId, reviewerIds))
         .catch((error) => console.warn('Could not process the manual review request:', error));
     } else {
       void import('../../review/services/assignedReviewService')

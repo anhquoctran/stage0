@@ -20,6 +20,22 @@ pub(super) fn list(
     context: &Arc<Mutex<ReviewContext>>,
     offset: usize,
 ) -> Result<Value, String> {
+    if offset >= 1000 {
+        let cursor = offset - 1000;
+        list_page(db, run, state, context, cursor / 64, cursor % 64)
+    } else {
+        list_page(db, run, state, context, offset, 0)
+    }
+}
+
+pub(super) fn list_page(
+    db: &Database,
+    run: &ReviewRun,
+    state: &mut ReviewToolState,
+    context: &Arc<Mutex<ReviewContext>>,
+    offset: usize,
+    comment_offset: usize,
+) -> Result<Value, String> {
     if state.feedback_candidates.is_none() {
         state.feedback_candidates = Some(
             feedback::candidates(db, run)?
@@ -30,8 +46,7 @@ pub(super) fn list(
     }
     let ids = state.feedback_candidates.as_ref().unwrap();
     let end = offset.saturating_add(2).min(ids.len());
-    let next_offset = if end < ids.len() { Some(end) } else { None };
-    let candidates = ids
+    let mut candidates = ids
         .get(offset..end)
         .unwrap_or_default()
         .iter()
@@ -41,21 +56,37 @@ pub(super) fn list(
         .flatten()
         .filter(|d| feedback::candidate_eligible(d, run.reviewer_id.as_deref()))
         .collect::<Vec<_>>();
-    let threads: Vec<_> = candidates
+    if candidates
         .iter()
-        .map(|d| {
-            let root = &d.comments[0];
-            let human = d
-                .comments
-                .iter()
-                .rev()
-                .find(|c| c.author_type == "user")
-                .unwrap();
-            json!({"id":d.id,"filePath":d.file_path,"discussionRevision":discussion_revision::of(d),
+        .any(|d| feedback::learning_history(d).len() > 2)
+        || comment_offset > 0
+    {
+        candidates.truncate(1);
+    }
+    let next = candidates
+        .last()
+        .and_then(|d| ids.iter().position(|id| id == &d.id))
+        .map(|i| i + 1)
+        .unwrap_or(end);
+    let mut next_offset = (next < ids.len()).then_some(next);
+    let mut threads = Vec::new();
+    for d in &candidates {
+        let history = feedback::learning_history(d);
+        if comment_offset >= history.len() {
+            return Err("Feedback history offset is outside the conversation".into());
+        }
+        let end = comment_offset.saturating_add(6).min(history.len());
+        if end < history.len() {
+            let index = ids.iter().position(|id| id == &d.id).unwrap();
+            next_offset = Some(1000 + index * 64 + end);
+        }
+        let root = &d.comments[0];
+        let human = history.last().unwrap();
+        threads.push(json!({"id":d.id,"filePath":d.file_path,"discussionRevision":discussion_revision::of(d),
             "rootCommentId":root.id,"targetCommentId":human.id,"isResolved":d.is_resolved,
-            "comments":[present(root,0,600),present(human,0,600)]})
-        })
-        .collect();
+            "commentOffset":comment_offset,"totalComments":history.len(),
+            "comments":history[comment_offset..end].iter().map(|c|present(c,0,600)).collect::<Vec<_>>() }));
+    }
     let value = context
         .lock()
         .map_err(|_| "Review context unavailable")?
@@ -64,17 +95,28 @@ pub(super) fn list(
             json!({"threads":threads,"nextOffset":next_offset}),
         )?;
     for thread in value["threads"].as_array().unwrap() {
-        let mut observation = DiscussionObservation::new(
-            thread["discussionRevision"].as_str().unwrap().into(),
-            thread["rootCommentId"].as_str().unwrap().into(),
-            thread["targetCommentId"].as_str().unwrap().into(),
+        let id = thread["id"].as_str().unwrap();
+        let revision = thread["discussionRevision"].as_str().unwrap();
+        let root = thread["rootCommentId"].as_str().unwrap();
+        let target = thread["targetCommentId"].as_str().unwrap();
+        let observation = state
+            .feedback_observations
+            .entry(id.into())
+            .or_insert_with(|| {
+                DiscussionObservation::new(revision.into(), root.into(), target.into())
+            });
+        if observation.revision != revision || observation.target_id != target {
+            *observation = DiscussionObservation::new(revision.into(), root.into(), target.into());
+        }
+        let original = candidates.iter().find(|d| d.id == id).unwrap();
+        observation.require(
+            feedback::learning_history(original)
+                .iter()
+                .map(|c| c.id.clone()),
         );
         for comment in thread["comments"].as_array().unwrap() {
-            record(&mut observation, comment);
+            record(observation, comment);
         }
-        state
-            .feedback_observations
-            .insert(thread["id"].as_str().unwrap().into(), observation);
     }
     Ok(value)
 }
@@ -119,6 +161,8 @@ pub(super) fn configure(
         initial["reviewFeedback"] = notes;
         system.push_str("\n\nHuman review feedback:\n");
         system.push_str(feedback::POLICY);
+    } else {
+        system.push_str("\nPersistent memory requires an available classify_review_feedback tool and a successful save result. No memory write tool is available in this run; do not claim you saved a preference. Ask for a new, concise directly addressed discussion if teaching context is unavailable or too long.");
     }
     if can_learn {
         registry.enable_feedback();

@@ -51,11 +51,10 @@ pub(crate) fn memories(db: &Database, repo_id: &str) -> Result<Vec<FeedbackMemor
         let thread = sessions[&session]
             .iter()
             .find(|t| t.id == memory.discussion_id);
-        if thread
-            .and_then(|t| super::candidate::key_for_comment(t, &memory.comment_id))
-            .as_deref()
-            == Some(&key)
-        {
+        if thread.is_some_and(|t| {
+            super::candidate::key_for_comment(t, &memory.comment_id).as_deref() == Some(&key)
+                || super::provenance::legacy_key(t, &memory.comment_id).as_deref() == Some(&key)
+        }) {
             valid.push(memory);
         } else {
             db.conn().execute("UPDATE review_feedback SET active=0,finding='',feedback='',reason='' WHERE id=?1 AND source_key=?2", params![memory.id,key]).map_err(|e| e.to_string())?;
@@ -90,7 +89,7 @@ pub(crate) fn update(
         super::candidate::thread(db, thread_id)?.ok_or("Feedback discussion no longer exists")?;
     if !eligible(&thread, run.reviewer_id.as_deref()) {
         return Err(
-            "Only human feedback on this reviewer's inline finding may be remembered".into(),
+            "Only human feedback or directly addressed teaching within the learning limits may be remembered".into(),
         );
     }
     let human = thread
@@ -136,7 +135,7 @@ pub(crate) fn update(
             |r| r.get(0),
         )
         .map_err(|e| e.to_string())?;
-    let seen: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM review_feedback WHERE discussion_id=?1 AND processed_key=?2)", params![thread_id,key], |r| r.get(0)).map_err(|e| e.to_string())?;
+    let seen: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM review_feedback WHERE discussion_id=?1 AND processed_key IN (?2,?3,?4))", params![thread_id,key,super::provenance::processed_key(&thread),super::provenance::legacy_key(&thread,comment_id)], |r| r.get(0)).map_err(|e| e.to_string())?;
     if seen {
         return Err(
             "This feedback was already processed or forgotten; do not learn it again".into(),
@@ -163,7 +162,7 @@ pub(crate) fn update(
     }
     // Ignore records classification, but does not rewrite an existing accepted preference.
     tx.execute("INSERT INTO review_feedback(id,repo_id,discussion_id,comment_id,file_path,source_key,processed_key,finding,feedback,reason,active,updated_at)
-        VALUES(?1,?2,?3,?4,?5,?6,?6,?7,?8,?9,?10,?11)
+        VALUES(?1,?2,?3,?4,?5,?6,?13,?7,?8,?9,?10,?11)
         ON CONFLICT(discussion_id) DO UPDATE SET processed_key=excluded.processed_key,
         comment_id=CASE WHEN ?12 THEN review_feedback.comment_id ELSE excluded.comment_id END,
         source_key=CASE WHEN ?12 THEN review_feedback.source_key ELSE excluded.source_key END,
@@ -171,10 +170,10 @@ pub(crate) fn update(
         feedback=CASE WHEN ?12 THEN review_feedback.feedback ELSE excluded.feedback END,
         reason=CASE WHEN ?12 THEN review_feedback.reason ELSE excluded.reason END,
         active=CASE WHEN ?12 THEN review_feedback.active ELSE excluded.active END,updated_at=excluded.updated_at",
-        params![uuid::Uuid::new_v4().to_string(), repo, thread_id, comment_id, thread.file_path, key,
+        params![uuid::Uuid::new_v4().to_string(), repo, thread_id, comment_id, thread.file_path.as_deref().unwrap_or(""), key,
         if active {excerpt(&thread.comments[0].body,800)}else{String::new()},
         if active {excerpt(&human.body,800)}else{String::new()}, if active {excerpt(reason,400)}else{String::new()}, active,
-        chrono::Utc::now().to_rfc3339(), operation == "ignore"]).map_err(|e| e.to_string())?;
+        chrono::Utc::now().to_rfc3339(), operation == "ignore",super::provenance::processed_key(&thread)]).map_err(|e| e.to_string())?;
     tx.execute("INSERT INTO ai_review_events(run_id,kind,detail,created_at) VALUES(?1,'review_feedback',?2,?3)", params![run.id,
         json!({"discussionId":thread_id,"commentId":comment_id,"operation":operation}).to_string(),chrono::Utc::now().to_rfc3339()]).map_err(|e| e.to_string())?;
     tx.commit().map_err(|e| e.to_string())

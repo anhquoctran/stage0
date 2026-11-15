@@ -2799,7 +2799,8 @@
     },
     "memory": {
       "title": "Review-Erinnerungen",
-      "description": "Eindeutige Ablehnungen werden bei der nächsten Antwort oder Prüfung erfasst. Relevante Erinnerungen gelten für alle Reviewer und Anbieter dieses Repositorys.",
+      "repositoryScope": "Dieses Repository",
+      "description": "Erwähne einen Bot in einer Diskussion, damit er sich eine konkrete Repository-Präferenz merkt. Du kannst sie in Antworten präzisieren. Erinnerungen werden in diesem Repository anbieterübergreifend geteilt.",
       "empty": "Noch keine Rückmeldungen gespeichert.",
       "forget": "Diese Rückmeldung vergessen",
       "error": "Review-Erinnerungen konnten nicht geladen oder aktualisiert werden.",

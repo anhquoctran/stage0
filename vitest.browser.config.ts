@@ -19,6 +19,7 @@ export default defineConfig({
       'frontend/features/preferences/components/tabs/PreferencesDensityTab.browser.test.tsx',
       'frontend/core/themes/ThemeEngine.browser.test.tsx',
       'frontend/common/components/CustomSelect.test.tsx',
+      'frontend/common/components/MarkdownEditorMentions.test.tsx',
       'frontend/common/components/CustomSelect.browser.test.tsx',
       'frontend/features/git/components/diff-viewer/FileEncodingPicker.test.tsx',
     ],

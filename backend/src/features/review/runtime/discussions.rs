@@ -133,9 +133,7 @@ pub(super) fn read_comment(
     let id = call.arguments["discussionId"].as_str().unwrap();
     let revision = call.arguments["discussionRevision"].as_str().unwrap();
     let feedback_page = state.feedback_observations.get(id).is_some_and(|o| {
-        o.revision == revision
-            && [o.root_id.as_str(), o.target_id.as_str()]
-                .contains(&call.arguments["commentId"].as_str().unwrap())
+        o.revision == revision && o.tracks(call.arguments["commentId"].as_str().unwrap())
     });
     let observation = if feedback_page {
         &mut state.feedback_observations
