@@ -15,6 +15,7 @@ mod mentions;
 pub mod model_adapter;
 mod model_failure;
 mod native_model_adapter;
+mod output_language;
 pub mod persistence;
 pub mod provider;
 mod review_finding;

@@ -111,3 +111,5 @@ mod continuation_tests;
 mod discussion_batch_tests;
 mod feedback_tests;
 mod output_headroom_tests;
+
+mod output_language_tests;

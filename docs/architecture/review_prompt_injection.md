@@ -22,6 +22,29 @@ snapshot reads, evidence checks and publication remain Rust responsibilities.
 JSON encoding prevents data from changing envelope syntax; it does not prove
 that a model will ignore a malicious natural-language instruction.
 
+## Reviewer output language
+
+At admission, `review/output_language.rs` resolves `ai.agentOutputLanguage` from
+saved Preferences. An explicit supported language overrides the UI language;
+`follow-app`, missing or invalid values use the supported UI language with English
+fallback. IPC cannot supply this privileged selection. It stays fixed throughout
+one run, and the next full review or discussion reply reads current Preferences.
+
+The standard and compact system prompts end with the same explicit language
+contract. Finding titles/bodies, replies, resolution explanations, generated MR
+descriptions, feedback explanations and summaries use the chosen language rather
+than copying the language of source or earlier discussion. Tool schema text fields
+repeat the short language directive, including findings nested in `submit_review`.
+Code, exact evidence/quotes, mentions, paths, identifiers and protocol enums are
+preserved. All native provider protocols and the ACP envelope share this contract;
+it grants no additional capability and does not change evidence or publication.
+
+The initial context contains `outputLanguage`; the `output_language` history event
+records only its code and full/reply scope for diagnosis. There is no extra model
+request, automatic translation or heuristic language rejection. Model compliance
+remains probabilistic; protocol fixtures verify consistent configuration and wire
+instructions, not live model quality. Existing historical comments are retained.
+
 ## Grouped source delivery
 
 Full MR runs receive an initial `diffBatch` in the user context. It contains
