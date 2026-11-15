@@ -120,3 +120,31 @@ user source, verify a complete ten-file description-first workflow, prove that
 projected source cannot authorize an early write, and check native thinking/none
 adapter behavior. The protocol/usage fixture validates orchestration only; no
 live provider request or user quota is consumed by these tests.
+
+## Review command threads, general comments and publication scope
+
+`review/discussion_scope.rs` distinguishes an exact, unanchored human `@bot review`
+request with only subsequent bot messages from a code-review concern. Such control
+threads stay in MR history, but are omitted from model discussion pages. Anchored
+threads, quoted/malformed commands, ordinary comments and any command thread with
+a later human response remain visible. No human/model reply is deleted or auto-
+resolved, and direct-mention gates continue to own response permission.
+
+Approval blockers now follow the application's resolvable discussion scope:
+file-anchored concerns must be resolved; general comments remain context rather
+than an impossible resolution requirement. `requiresResolution` makes this
+explicit in model pages and both prompt variants. Malformed stored anchors fail
+closed. Submission and the publication transaction use the same predicate;
+a late inline concern aborts publication atomically, including unassigned/ad-hoc
+reviews. Source coverage, redaction, evidence and reviewer requirements are not
+relaxed by this distinction.
+
+The `submitted` event additionally records `coverageDiagnostics`: eligible and
+complete diff counts, exclusions, source-context limits and recoverable tool
+errors. This separates legitimate partial source coverage from exhausted budgets.
+A November 15 trace stopped at 22,056 reported tokens with 41,944 remaining under
+the former one-token-per-added-byte estimate. The scaled estimator and a codec
+replay now permit the fixture to finish in three requests at 41,056 reported
+tokens. Its intentionally redacted source remains partial, rather than acquiring
+an unsupported approval. These are usage/protocol fixtures, not a live model
+quality or billing benchmark.

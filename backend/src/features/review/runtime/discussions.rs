@@ -49,6 +49,7 @@ pub(super) fn list(
         .into_iter()
         .filter(|d| {
             !d.is_resolved
+                && !crate::features::review::discussion_scope::is_control(d)
                 && !state.resolved_discussions.contains(&d.id)
                 && state
                     .reply_discussion_id
@@ -86,7 +87,7 @@ pub(super) fn list(
         let thread = json!({"id":discussion.id,"filePath":discussion.file_path,"side":discussion.diff_side,
             "lineNumber":discussion.line_number,"commitId":discussion.commit_id,"canReply":can_reply,
             "discussionRevision":discussion_revision::of(discussion),"targetCommentId":latest.map(|c| &c.id),
-            "rootCommentId":root.map(|c| &c.id),"commentCount":discussion.comments.len(),"comments":comments});
+            "rootCommentId":root.map(|c| &c.id),"commentCount":discussion.comments.len(),"requiresResolution":crate::features::review::discussion_scope::requires_resolution(discussion),"comments":comments});
         threads.push(thread);
         let candidate = json!({"threads":threads,"totalOpen":open.len(),"nextOffset":if end+1 < open.len(){Some(end+1)}else{None}});
         if threads.len() > 1 && candidate.to_string().len() > page_bytes {
