@@ -114,5 +114,5 @@ mod output_headroom_tests;
 
 mod control_discussion_tests;
 
-mod thinking_replay_fixture;
 mod output_language_tests;
+mod thinking_replay_fixture;
