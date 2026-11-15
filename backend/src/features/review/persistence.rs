@@ -125,6 +125,7 @@ impl Database {
         }
         let mut conn = self.conn();
         let tx = conn.transaction().map_err(|e| e.to_string())?;
+        crate::features::virtual_mr::sync::validate_publication(&tx, run)?;
         let mut status_changed = false;
         if run.reply_discussion_id.is_some() {
             let reviewer = run
@@ -334,6 +335,7 @@ impl Database {
             }
         }
         let mut saved = run.clone();
+        crate::features::virtual_mr::sync::complete_review(&tx, run)?;
         saved.published = true;
         tx.execute(
             "UPDATE ai_review_runs SET payload=?2 WHERE id=?1",

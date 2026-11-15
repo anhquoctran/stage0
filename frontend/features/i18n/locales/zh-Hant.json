@@ -1161,6 +1161,11 @@
       "duplicateExists": "{{sourceToTarget}} 已有開啟中的虛擬 MR：「{{title}}」。請從合併請求清單開啟。",
       "reviewerLabelsSaveFailed": "無法儲存 MR 審查者或標籤，請再試一次。",
       "resolveOpenDiscussions": "請先解決所有尚未解決的程式碼討論，再開始下一次 AI 審查。尚未解決：{{count}}。"
+    },
+    "sync": {
+      "needsReview": "變更需要審查。新審查將使用最新提交的程式碼。",
+      "unavailable": "某個分支在本機無法使用。請取得或還原該分支以更新此 MR。",
+      "historical": "此審查針對較早的修訂版本。"
     }
   },
   "onboarding": {

@@ -1168,6 +1168,11 @@
       "duplicateExists": "Une MR virtuelle est déjà ouverte pour {{sourceToTarget}} : « {{title}} ». Ouvrez-la depuis la liste des demandes de fusion.",
       "reviewerLabelsSaveFailed": "Impossible d’enregistrer les réviseurs ou les libellés de la MR. Veuillez réessayer.",
       "resolveOpenDiscussions": "Résolvez les discussions de code ouvertes avant de lancer une autre revue IA. Ouvertes : {{count}}."
+    },
+    "sync": {
+      "needsReview": "Les modifications doivent être examinées. Une nouvelle revue utilise le dernier code commité.",
+      "unavailable": "Une branche est indisponible localement. Récupérez-la ou restaurez-la pour actualiser cette MR.",
+      "historical": "Cette revue concerne une révision antérieure."
     }
   },
   "onboarding": {

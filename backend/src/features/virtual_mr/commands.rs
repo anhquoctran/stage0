@@ -22,10 +22,18 @@ use tauri::{AppHandle, Manager};
 pub async fn list_virtual_mr_sessions(
     app: AppHandle,
     repo_id: String,
-) -> Result<Vec<VirtualMrSessionDb>, String> {
+    sync_only: Option<bool>,
+    request_sync: Option<bool>,
+) -> Result<super::SessionListing, String> {
     let result: Result<_, String> = async {
+        if sync_only.unwrap_or(false) {
+            return super::sync::read_states(app.clone(), repo_id, request_sync.unwrap_or(false))
+                .await
+                .map(super::SessionListing::Revisions);
+        }
         let db = app.state::<Database>();
         db.list_virtual_mr_sessions(&repo_id)
+            .map(super::SessionListing::Sessions)
             .map_err(|e| e.to_string())
     }
     .await;
@@ -39,17 +47,11 @@ pub async fn save_virtual_mr_session(
 ) -> Result<VirtualMrSessionSaveOutcome, String> {
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
+        let membership = super::sync::membership(&db, &session.id);
         let (outcome, previous) = db
             .save_virtual_mr_session_with_status_change(&session)
             .map_err(|e| e.to_string())?;
-        if let Some(previous) = previous {
-            tauri::async_runtime::spawn(crate::features::virtual_mr::status_notification::send(
-                app.clone(),
-                session.title.clone(),
-                previous,
-                session.status.clone(),
-            ));
-        }
+        super::sync::session_saved(&app, &session, previous, membership);
         Ok(outcome)
     }
     .await;
@@ -61,7 +63,9 @@ pub async fn delete_virtual_mr_session(app: AppHandle, session_id: String) -> Re
     let result: Result<_, String> = async {
         let db = app.state::<Database>();
         db.delete_virtual_mr_session(&session_id)
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string())?;
+        super::sync::registry_changed(&app);
+        Ok(())
     }
     .await;
     result.map_err(|error| crate::common::messages::command_error("virtualMr", error))

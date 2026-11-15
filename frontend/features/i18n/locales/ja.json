@@ -1161,6 +1161,11 @@
       "duplicateExists": "{{sourceToTarget}} の Virtual MR はすでに開いています: 「{{title}}」。マージリクエスト一覧から開いてください。",
       "reviewerLabelsSaveFailed": "MR のレビュアーまたはラベルを保存できませんでした。もう一度お試しください。",
       "resolveOpenDiscussions": "次の AI レビューを始める前に、未解決のコードディスカッションを解決してください。未解決: {{count}} 件。"
+    },
+    "sync": {
+      "needsReview": "変更のレビューが必要です。新しいレビューには最新のコミット済みコードが使われます。",
+      "unavailable": "ブランチがローカルにありません。取得または復元して、このMRを更新してください。",
+      "historical": "このレビューは以前のリビジョンを対象としています。"
     }
   },
   "onboarding": {

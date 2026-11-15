@@ -1168,6 +1168,11 @@
       "duplicateExists": "Ya hay un MR virtual abierto para {{sourceToTarget}}: “{{title}}”. Ábrelo desde la lista de solicitudes de fusión.",
       "reviewerLabelsSaveFailed": "No se pudieron guardar los revisores o las etiquetas del MR. Inténtalo de nuevo.",
       "resolveOpenDiscussions": "Resuelve las discusiones de código abiertas antes de iniciar otra revisión de IA. Abiertas: {{count}}."
+    },
+    "sync": {
+      "needsReview": "Los cambios necesitan revisión. Una nueva revisión utiliza el último código confirmado.",
+      "unavailable": "Una rama no está disponible localmente. Recupérala o restáurala para actualizar esta MR.",
+      "historical": "Esta revisión corresponde a una versión anterior."
     }
   },
   "onboarding": {

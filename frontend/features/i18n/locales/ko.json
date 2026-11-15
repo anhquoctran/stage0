@@ -1161,6 +1161,11 @@
       "duplicateExists": "{{sourceToTarget}}에 열린 가상 MR이 있습니다: “{{title}}”. 병합 요청 목록에서 여세요.",
       "reviewerLabelsSaveFailed": "MR 리뷰어나 레이블을 저장할 수 없습니다. 다시 시도하세요.",
       "resolveOpenDiscussions": "새 AI 리뷰를 시작하기 전에 미해결 코드 토론을 모두 해결하세요. 미해결: {{count}}개."
+    },
+    "sync": {
+      "needsReview": "변경 사항을 검토해야 합니다. 새 검토는 최근 커밋된 코드를 사용합니다.",
+      "unavailable": "로컬에서 브랜치를 사용할 수 없습니다. 브랜치를 가져오거나 복원하여 이 MR을 업데이트하세요.",
+      "historical": "이 검토는 이전 리비전을 대상으로 합니다."
     }
   },
   "onboarding": {

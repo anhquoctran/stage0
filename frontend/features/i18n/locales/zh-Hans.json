@@ -1161,6 +1161,11 @@
       "duplicateExists": "{{sourceToTarget}} 已有一个打开的虚拟 MR：“{{title}}”。请从合并请求列表打开。",
       "reviewerLabelsSaveFailed": "无法保存 MR 审查者或标签，请重试。",
       "resolveOpenDiscussions": "请先解决所有未解决的代码讨论，再开始下一次 AI 审查。未解决：{{count}}。"
+    },
+    "sync": {
+      "needsReview": "更改需要审查。新审查将使用最新提交的代码。",
+      "unavailable": "某个分支在本地不可用。请获取或恢复该分支以更新此 MR。",
+      "historical": "此审查针对较早的修订版本。"
     }
   },
   "onboarding": {

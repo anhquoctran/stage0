@@ -1161,6 +1161,11 @@
       "duplicateExists": "Für {{sourceToTarget}} ist bereits eine virtuelle MR geöffnet: „{{title}}“. Öffne sie über die Merge-Request-Liste.",
       "reviewerLabelsSaveFailed": "MR-Reviewer oder Labels konnten nicht gespeichert werden. Bitte erneut versuchen.",
       "resolveOpenDiscussions": "Löse offene Code-Diskussionen, bevor du ein weiteres KI-Review startest. Offen: {{count}}."
+    },
+    "sync": {
+      "needsReview": "Die Änderungen müssen geprüft werden. Eine neue Prüfung verwendet den zuletzt committeten Code.",
+      "unavailable": "Ein Branch ist lokal nicht verfügbar. Rufe ihn ab oder stelle ihn wieder her, um diesen MR zu aktualisieren.",
+      "historical": "Diese Prüfung bezieht sich auf eine frühere Revision."
     }
   },
   "onboarding": {

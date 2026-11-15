@@ -119,6 +119,7 @@ pub async fn run(
     };
     app.state::<super::coordinator::ReviewCoordinator>()
         .release(&run.session_id);
+    crate::features::virtual_mr::sync::repository_changed(&app, &run.snapshot.repo_path);
     crate::features::virtual_mr::status_notification::send_review_transition(
         app.clone(),
         run.id.clone(),

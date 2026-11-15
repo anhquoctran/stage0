@@ -1168,6 +1168,11 @@
       "duplicateExists": "Esiste già una MR virtuale aperta per {{sourceToTarget}}: “{{title}}”. Aprila dall’elenco delle richieste di merge.",
       "reviewerLabelsSaveFailed": "Impossibile salvare i revisori o le etichette della MR. Riprova.",
       "resolveOpenDiscussions": "Risolvi le discussioni sul codice aperte prima di avviare un’altra revisione IA. Aperte: {{count}}."
+    },
+    "sync": {
+      "needsReview": "Le modifiche richiedono una revisione. Una nuova revisione usa il codice dell’ultimo commit.",
+      "unavailable": "Un ramo non è disponibile localmente. Recuperalo o ripristinalo per aggiornare questa MR.",
+      "historical": "Questa revisione si riferisce a una versione precedente."
     }
   },
   "onboarding": {

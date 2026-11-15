@@ -7,6 +7,7 @@ import { useVirtualMrStore } from '../store/useVirtualMrStore';
 import { hasVirtualMrActivity } from '../utils/virtualMrActivity';
 import { getMrSequenceNumber } from '../utils/virtualMrSequence';
 import { VirtualMrHeader } from './hub/VirtualMrHeader';
+import { MrSyncNotice } from './MrSyncNotice';
 import { VirtualMrMetadataBar } from './hub/VirtualMrMetadataBar';
 import { useMrMetadataDropdowns } from './useMrMetadataDropdowns';
 
@@ -149,6 +150,7 @@ export const VirtualMrHub: React.FC = () => {
         handleSwapBranches={handleSwapBranches}
       />
 
+      <MrSyncNotice sync={session.sync} />
       {/* METADATA BAR: ASSIGNEE, REVIEWERS, LABELS, 4 WORKSPACE TABS */}
       <VirtualMrMetadataBar
         session={session}
