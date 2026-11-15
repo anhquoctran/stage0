@@ -1,3 +1,4 @@
+import { parseReviewerReviewCommands } from '../../virtual-mr/utils/parseReviewerReviewCommand';
 import type { VirtualMrDiscussion } from '../../virtual-mr/types/VirtualMrDiscussion';
 import { getDiscussionComments } from '../../virtual-mr/utils/discussionReferences';
 
@@ -53,7 +54,7 @@ export function discussionReplyRecipients(discussion: VirtualMrDiscussion, ids: 
 /** The execution policy is mention-only, including followups on the bot's own findings. */
 export function addressedDiscussionReplyRecipients(discussion: VirtualMrDiscussion, ids: string[]): string[] {
   const latest = getDiscussionComments(discussion).at(-1);
-  if (!latest) return [];
+  if (!latest || parseReviewerReviewCommands(latest.body).length) return [];
   const content = latest.body.replace(/\[@(?:\\.|[^\\\]\r\n])+\]\(#mr-mention\/reviewer\/[^)\s]+\)/gu, '');
   if (!/[\p{L}\p{N}]/u.test(content)) return [];
   const mentioned = directReviewerMentions(latest.body, ids);

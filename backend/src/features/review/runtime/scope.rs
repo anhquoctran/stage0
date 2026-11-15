@@ -120,10 +120,7 @@ fn validate_manual_review_request(
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .map_err(|_| crate::common::messages::code("backend.review.manualReviewNoRootComment"))?;
-    if author_type != "user"
-        || !mentions::is_manual_review_command(&body)
-        || !mentions::has_reviewer_mention(&body, reviewer_id)
-    {
+    if author_type != "user" || !mentions::manual_review_targets_reviewer(&body, reviewer_id) {
         return Err(crate::common::messages::failure(
             "backend.review.manualReviewCommandInvalid",
             serde_json::json!({}),

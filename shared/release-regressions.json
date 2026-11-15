@@ -553,6 +553,25 @@
       "tests": [
         "features::virtual_mr::sync::tests::scale_tests::a_thousand_mrs_share_batched_git_reads_and_unchanged_scans_do_not_write_sqlite"
       ]
+    },
+    {
+      "id": "markdown-mention-caret",
+      "runner": "node",
+      "path": "scripts/markdown-mention-caret.test.mjs"
+    },
+    {
+      "id": "multi-review-command",
+      "runner": "node",
+      "path": "scripts/multi-review-command.test.mjs"
+    },
+    {
+      "id": "multi-review-command-admission",
+      "runner": "rust",
+      "path": "backend/src/features/review/runtime/tests/multi_reviewer_command_tests.rs",
+      "tests": [
+        "features::review::runtime::tests::multi_reviewer_command_tests::root_command_parser_matches_the_frontend_fixture_and_rejects_ordinary_or_malformed_mentions",
+        "features::review::runtime::tests::multi_reviewer_command_tests::multi_bot_root_commands_require_each_assignment_and_each_bots_findings_to_be_resolved"
+      ]
     }
   ]
 }

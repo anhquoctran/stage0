@@ -1,0 +1,134 @@
+[
+  {
+    "body": "[@One](#mr-mention/reviewer/one) review",
+    "targets": [
+      "one"
+    ]
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) [@Two](#mr-mention/reviewer/two) [@Three](#mr-mention/reviewer/three) review",
+    "targets": [
+      "one",
+      "two",
+      "three"
+    ]
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) [@One](#mr-mention/reviewer/one) [@Two](#mr-mention/reviewer/two) REVIEW",
+    "targets": [
+      "one",
+      "two"
+    ]
+  },
+  {
+    "body": "  [@One](#mr-mention/reviewer/one)\t[@Two](#mr-mention/reviewer/two)  review  ",
+    "targets": [
+      "one",
+      "two"
+    ]
+  },
+  {
+    "body": "[@AI \\[QA\\]](#mr-mention/reviewer/reviewer%2Fa) review",
+    "targets": [
+      "reviewer/a"
+    ]
+  },
+  {
+    "body": "[@Quốc](#mr-mention/reviewer/bot-%E1%BB%91) review",
+    "targets": [
+      "bot-ố"
+    ]
+  },
+  {
+    "body": "",
+    "targets": []
+  },
+  {
+    "body": "@one @two review",
+    "targets": []
+  },
+  {
+    "body": "> [@One](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "`[@One](#mr-mention/reviewer/one) review`",
+    "targets": []
+  },
+  {
+    "body": "```\n[@One](#mr-mention/reviewer/one) review\n```",
+    "targets": []
+  },
+  {
+    "body": "Please [@One](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) please review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) review this",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one)\n[@Two](#mr-mention/reviewer/two) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one)\r[@Two](#mr-mention/reviewer/two) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one)[@Two](#mr-mention/reviewer/two) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) [@Two](#mr-mention/reviewer/two) review review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/one) [@Person](#mr-mention/assignee/person) review",
+    "targets": []
+  },
+  {
+    "body": "![@One](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "\\[@One](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "[@broken [label]](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "[@](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/%broken) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/%FF) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/%00) review",
+    "targets": []
+  },
+  {
+    "body": "[@One\tTwo](#mr-mention/reviewer/one) review",
+    "targets": []
+  },
+  {
+    "body": "[@One](#mr-mention/reviewer/ố) review",
+    "targets": []
+  }
+]

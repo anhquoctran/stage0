@@ -116,3 +116,5 @@ mod control_discussion_tests;
 
 mod output_language_tests;
 mod thinking_replay_fixture;
+
+mod multi_reviewer_command_tests;
