@@ -2791,6 +2791,14 @@
       "installFailed": "Không thể cài model local. Hãy kiểm tra kết nối và dung lượng đĩa.",
       "clearFailed": "Không thể xoá cache context.",
       "repair": "Kiểm tra / sửa model"
+    },
+    "memory": {
+      "title": "Ghi nhớ review",
+      "description": "Lời từ chối rõ ràng được ghi nhớ trong lượt phản hồi hoặc review tiếp theo. Các reviewer trong repo dùng chung ghi nhớ liên quan, trên mọi provider.",
+      "empty": "Chưa có phản hồi nào được ghi nhớ.",
+      "forget": "Quên phản hồi này",
+      "error": "Không thể tải hoặc cập nhật ghi nhớ review.",
+      "immediate": "Thao tác quên có hiệu lực ngay; Huỷ không khôi phục lại."
     }
   },
   "backend": {

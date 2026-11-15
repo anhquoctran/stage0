@@ -2798,6 +2798,14 @@
       "installFailed": "Impossible d’installer le modèle local. Vérifiez la connexion et l’espace disque.",
       "clearFailed": "Impossible de vider le cache de contexte.",
       "repair": "Vérifier / réparer le modèle"
+    },
+    "memory": {
+      "title": "Mémoire de revue",
+      "description": "Les refus explicites sont mémorisés lors de la prochaine réponse ou revue. Les souvenirs pertinents sont partagés entre les réviseurs et fournisseurs de ce dépôt.",
+      "empty": "Aucun retour mémorisé.",
+      "forget": "Oublier ce retour",
+      "error": "Impossible de charger ou de modifier la mémoire de revue.",
+      "immediate": "L’oubli est immédiat ; Annuler ne restaure pas ce retour."
     }
   },
   "backend": {

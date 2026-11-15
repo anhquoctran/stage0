@@ -138,7 +138,7 @@ test('every named feature operation preserves its command, input, progress callb
     }
     assert.equal(Object.keys(service).length, expected.size);
   }
-  assert.equal(operations.size, 155); // Includes discussion-resolution history and local review context maintenance.
+  assert.equal(operations.size, 157); // Includes discussion-resolution history local review context maintenance and repository feedback management.
 });
 
 

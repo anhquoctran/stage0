@@ -2798,6 +2798,14 @@
       "installFailed": "Não foi possível instalar o modelo local. Verifique a ligação e o espaço em disco.",
       "clearFailed": "Não foi possível limpar a cache de contexto.",
       "repair": "Verificar / reparar modelo"
+    },
+    "memory": {
+      "title": "Memória de revisão",
+      "description": "Recusas claras são aprendidas na próxima resposta ou revisão. As memórias relevantes são partilhadas entre revisores e fornecedores deste repositório.",
+      "empty": "Ainda não há comentários memorizados.",
+      "forget": "Esquecer este comentário",
+      "error": "Não foi possível carregar ou atualizar a memória de revisão.",
+      "immediate": "Esquecer tem efeito imediato; Cancelar não restaura o comentário."
     }
   },
   "backend": {

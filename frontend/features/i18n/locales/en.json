@@ -2791,6 +2791,14 @@
       "installFailed": "Could not install the local model. Check your connection and available disk space.",
       "clearFailed": "Could not clear the context cache.",
       "repair": "Check / repair model"
+    },
+    "memory": {
+      "title": "Review memory",
+      "description": "Clear rejections are learned during the next reviewer reply or review. Relevant memories are shared by reviewers in this repository, across providers.",
+      "empty": "No remembered feedback yet.",
+      "forget": "Forget this feedback",
+      "error": "Could not load or update review memory.",
+      "immediate": "Forgetting takes effect immediately; Cancel does not restore it."
     }
   },
   "backend": {

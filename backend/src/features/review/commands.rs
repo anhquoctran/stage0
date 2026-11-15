@@ -234,7 +234,7 @@ pub async fn start_ai_review(
             "review-v2:{:x}",
             Sha256::digest(
                 format!(
-                    "{}{}{}{}{}{:?}{}",
+                    "{}{}{}{}{}{:?}{}{}",
                     super::runtime::SYSTEM,
                     request.instructions,
                     policy,
@@ -250,6 +250,7 @@ pub async fn start_ai_review(
                         .unwrap_or_default(),
                     request.reply_discussion_id,
                     request.agent_output_language,
+                    super::feedback::POLICY,
                 )
                 .as_bytes()
             )
