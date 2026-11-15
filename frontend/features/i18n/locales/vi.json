@@ -2799,7 +2799,8 @@
     },
     "memory": {
       "title": "Ghi nhớ review",
-      "description": "Lời từ chối rõ ràng được ghi nhớ trong lượt phản hồi hoặc review tiếp theo. Các reviewer trong repo dùng chung ghi nhớ liên quan, trên mọi provider.",
+      "repositoryScope": "Toàn bộ repository",
+      "description": "Mention bot trong discussion để nhờ ghi nhớ một preference cụ thể của repo. Bạn có thể trao đổi và làm rõ qua các reply. Bộ nhớ được chia sẻ trong repo giữa các provider.",
       "empty": "Chưa có phản hồi nào được ghi nhớ.",
       "forget": "Quên phản hồi này",
       "error": "Không thể tải hoặc cập nhật ghi nhớ review.",

@@ -2799,7 +2799,8 @@
     },
     "memory": {
       "title": "Review memory",
-      "description": "Clear rejections are learned during the next reviewer reply or review. Relevant memories are shared by reviewers in this repository, across providers.",
+      "repositoryScope": "This repository",
+      "description": "Mention a bot in a discussion to ask it to remember a concrete repository preference. You can clarify it through replies. Memories are shared within this repository across providers.",
       "empty": "No remembered feedback yet.",
       "forget": "Forget this feedback",
       "error": "Could not load or update review memory.",

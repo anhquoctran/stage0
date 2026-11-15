@@ -1,12 +1,10 @@
 use crate::{
     core::db::Database,
     features::{
-        review::{security, ReviewRun},
+        review::{mentions, ReviewRun},
         virtual_mr::persistence::VirtualMrDiscussionDb,
     },
 };
-use serde_json::json;
-use sha2::{Digest, Sha256};
 
 pub(crate) fn source_key(thread: &VirtualMrDiscussionDb) -> Option<String> {
     let human = thread
@@ -17,41 +15,10 @@ pub(crate) fn source_key(thread: &VirtualMrDiscussionDb) -> Option<String> {
     key_for_comment(thread, &human.id)
 }
 
-pub(crate) fn key_for_comment(thread: &VirtualMrDiscussionDb, id: &str) -> Option<String> {
-    let root = thread.comments.first()?;
-    let human = thread
-        .comments
-        .iter()
-        .find(|c| c.id == id && c.author_type == "user")?;
-    Some(format!(
-        "{:x}",
-        Sha256::digest(
-            json!([
-                root.id,
-                root.body,
-                human.id,
-                human.body,
-                thread.file_path,
-                thread.diff_side,
-                thread.commit_id
-            ])
-            .to_string()
-            .as_bytes()
-        )
-    ))
-}
+pub(crate) use super::provenance::key_for_comment;
 
 pub(crate) fn eligible(thread: &VirtualMrDiscussionDb, reviewer: Option<&str>) -> bool {
-    thread.file_path.is_some()
-        && thread.commit_id.is_some()
-        && thread
-            .comments
-            .first()
-            .is_some_and(|c| c.author_type == "ai_agent" && Some(c.author_id.as_str()) == reviewer)
-        && thread
-            .comments
-            .iter()
-            .any(|c| c.author_type == "user" && !security::redact(&c.body).trim().is_empty())
+    super::learning_scope::eligible(thread, reviewer)
 }
 
 pub(crate) fn candidates(
@@ -65,13 +32,21 @@ pub(crate) fn candidates(
             JOIN virtual_mr_sessions s ON s.id=d.session_id
             JOIN virtual_mr_comments root ON root.rowid=(SELECT MIN(c.rowid) FROM virtual_mr_comments c WHERE c.discussion_id=d.id)
             WHERE s.repo_id=(SELECT repo_id FROM virtual_mr_sessions WHERE id=?1)
-            AND root.author_type='ai_agent' AND root.author_id=?2 AND d.file_path IS NOT NULL AND d.commit_id IS NOT NULL
+            AND ((root.author_type='ai_agent' AND root.author_id=?2 AND d.file_path IS NOT NULL AND d.commit_id IS NOT NULL) OR (d.file_path IS NULL AND EXISTS(SELECT 1 FROM virtual_mr_comments h WHERE h.discussion_id=d.id AND h.author_type='user' AND instr(h.body,?4)>0)))
             AND EXISTS(SELECT 1 FROM virtual_mr_comments c WHERE c.discussion_id=d.id AND c.author_type='user')
             AND (?3 IS NULL OR (d.id=?3 AND d.session_id=?1))
             ORDER BY (SELECT MAX(c.rowid) FROM virtual_mr_comments c WHERE c.discussion_id=d.id AND c.author_type='user') DESC LIMIT 1000").map_err(|e| e.to_string())?;
         let rows = query
             .query_map(
-                rusqlite::params![run.session_id, run.reviewer_id, run.reply_discussion_id],
+                rusqlite::params![
+                    run.session_id,
+                    run.reviewer_id,
+                    run.reply_discussion_id,
+                    format!(
+                        "](#mr-mention/reviewer/{})",
+                        mentions::encode_id(run.reviewer_id.as_deref().unwrap_or(""))
+                    )
+                ],
                 |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
             )
             .map_err(|e| e.to_string())?;
@@ -99,8 +74,8 @@ pub(crate) fn candidates(
             continue;
         }
         let key = source_key(thread).unwrap();
-        let seen: bool = db.conn().query_row("SELECT EXISTS(SELECT 1 FROM review_feedback WHERE discussion_id=?1 AND processed_key=?2)",
-            rusqlite::params![thread.id, key], |r| r.get(0)).map_err(|e| e.to_string())?;
+        let seen: bool = db.conn().query_row("SELECT EXISTS(SELECT 1 FROM review_feedback WHERE discussion_id=?1 AND processed_key IN (?2,?3,?4))",
+            rusqlite::params![thread.id, key, super::provenance::processed_key(thread), super::provenance::legacy_key(thread, &super::learning_scope::history(thread).last().unwrap().id)], |r| r.get(0)).map_err(|e| e.to_string())?;
         if !seen {
             out.push(thread.clone());
         }

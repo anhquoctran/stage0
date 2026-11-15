@@ -58,7 +58,7 @@ export function ReviewFeedbackMemories({ repoId }: { repoId: string }) {
         {memories.map((memory) => (
           <div key={memory.id} className="flex gap-2 rounded-sm bg-base p-2">
             <details className="min-w-0 flex-1 rounded-sm">
-              <summary className="cursor-pointer text-text break-words">{memory.filePath}: {memory.reason}</summary>
+              <summary className="cursor-pointer text-text break-words">{memory.filePath || t('review.memory.repositoryScope')}: {memory.reason}</summary>
               <p className="mt-2 text-subtext0 whitespace-pre-wrap break-words">{memory.finding}</p>
               <blockquote className="mt-2 text-subtext1 whitespace-pre-wrap break-words">{memory.feedback}</blockquote>
             </details>

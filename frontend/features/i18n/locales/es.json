@@ -2806,7 +2806,8 @@
     },
     "memory": {
       "title": "Memoria de revisión",
-      "description": "Los rechazos claros se aprenden en la siguiente respuesta o revisión. Las memorias relevantes se comparten entre revisores y proveedores de este repositorio.",
+      "repositoryScope": "Este repositorio",
+      "description": "Menciona a un bot en una discusión para pedirle que recuerde una preferencia concreta del repositorio. Puedes aclararla mediante respuestas. Los recuerdos se comparten entre proveedores dentro de este repositorio.",
       "empty": "Todavía no hay comentarios recordados.",
       "forget": "Olvidar este comentario",
       "error": "No se pudo cargar o actualizar la memoria de revisión.",

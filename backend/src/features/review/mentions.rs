@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 use serde_json::{json, Value};
 
-fn encode_id(id: &str) -> String {
+pub(super) fn encode_id(id: &str) -> String {
     id.bytes()
         .map(|byte| {
             if byte.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&byte) {

@@ -61,3 +61,14 @@ it('exposes a load failure without pretending there are no memories', async () =
   expect(await screen.findByRole('alert')).toBeVisible();
   expect(screen.queryByText('No remembered feedback yet.')).toBeNull();
 });
+
+
+it('shows conversational preferences with repository scope and keeps immediate forgetting', async () => {
+  const user = userEvent.setup();
+  fixture.list.mockResolvedValue([{ ...memory, filePath: '', finding: 'Can we agree on test names?', feedback: 'Yes, remember descriptive names.', reason: 'Use descriptive test names' }]);
+  render(<ReviewFeedbackMemories repoId="repo-a" />);
+  expect(await screen.findByText('This repository: Use descriptive test names')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Forget this feedback' }));
+  expect(fixture.forget).toHaveBeenCalledWith({ repoId: 'repo-a', memoryId: 'm1' });
+  expect(await screen.findByText('No remembered feedback yet.')).toBeVisible();
+});
