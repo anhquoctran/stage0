@@ -1,4 +1,5 @@
 import type { VirtualMrDeletionActivity } from '../../types/VirtualMrDeletionActivity';
+import type { VirtualMrDiscussionActivity } from '../../types/VirtualMrDiscussionActivity';
 import type { AuthorType } from '../../types/AuthorType';
 import type { DbDiscussion } from '../../types/DbDiscussion';
 import type { DiscussionCodeSnippet } from '../../types/DiscussionCodeSnippet';
@@ -8,6 +9,7 @@ import type { ReviewActionType } from '../../types/ReviewActionType';
 export interface DiscussionService {
   deleteMrComment(input: { commentId: string }): Promise<{ discussionId: string; deletedDiscussion: boolean; activity: VirtualMrDeletionActivity }>;
   listMrDeletionActivity(input: { sessionId: string }): Promise<VirtualMrDeletionActivity[]>;
+  listMrDiscussionActivity(input: { sessionId: string }): Promise<VirtualMrDiscussionActivity[]>;
   addMrComment(input: {
     comment: {
       id: string;

@@ -1,10 +1,11 @@
 import React from 'react';
+import { usePreferencesStore } from '../../../preferences/store/usePreferencesStore';
+import { densityGraphRowHeight } from '../../../preferences/utils/uiDensity';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/common/utils/dateTime';
 import { useDateTimeLanguage } from '../../../i18n/hooks/useDateTimeLanguage';
 import { CommitAuthorAvatar } from '../CommitAuthorAvatar';
 import {
-    ROW_HEIGHT,
     LANE_COLORS,
     laneX,
     referenceColor,
@@ -37,6 +38,10 @@ export const GitGraphTableRow: React.FC<{
 }) => {
     const { t } = useTranslation();
     useDateTimeLanguage();
+    const density = usePreferencesStore((state) => state.uiDensity);
+    const rowHeight = densityGraphRowHeight(density);
+    const center = rowHeight / 2;
+    const curve = rowHeight * 0.75;
     const color = LANE_COLORS[row.lane % LANE_COLORS.length];
 
     return (
@@ -52,7 +57,8 @@ export const GitGraphTableRow: React.FC<{
             }}
             aria-selected={isSelected}
             tabIndex={0}
-            className={`h-9 cursor-pointer border-b border-surface0/50 outline-none transition-colors hover:bg-surface0/70 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand ${
+            style={{ height: rowHeight }}
+            className={`cursor-pointer border-b border-surface0/50 outline-none transition-colors hover:bg-surface0/70 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-brand ${
                 isSelected
                     ? 'bg-brand/20'
                     : isActiveMatch
@@ -65,8 +71,8 @@ export const GitGraphTableRow: React.FC<{
             <td className="px-3 py-0">
                 <svg
                     width={graphWidth - 24}
-                    height={ROW_HEIGHT}
-                    viewBox={`0 0 ${graphWidth - 24} ${ROW_HEIGHT}`}
+                    height={rowHeight}
+                    viewBox={`0 0 ${graphWidth - 24} ${rowHeight}`}
                     role="img"
                     aria-label={t('git.graphTable.laneLabel', { lane: row.lane + 1 })}
                     className="block"
@@ -74,7 +80,7 @@ export const GitGraphTableRow: React.FC<{
                     {hasSearchFilter ? (
                         <circle
                             cx={laneX(row.lane)}
-                            cy="18"
+                            cy={center}
                             r="4"
                             fill={color}
                         />
@@ -83,7 +89,7 @@ export const GitGraphTableRow: React.FC<{
                             {row.throughLanes.map((lane) => (
                                 <path
                                     key={`through-${lane}`}
-                                    d={`M ${laneX(lane)} 0 V ${ROW_HEIGHT}`}
+                                    d={`M ${laneX(lane)} 0 V ${rowHeight}`}
                                     fill="none"
                                     stroke={
                                         LANE_COLORS[lane % LANE_COLORS.length]
@@ -93,7 +99,7 @@ export const GitGraphTableRow: React.FC<{
                             ))}
                             {row.hasIncomingEdge && (
                                 <path
-                                    d={`M ${laneX(row.lane)} 0 V 18`}
+                                    d={`M ${laneX(row.lane)} 0 V ${center}`}
                                     fill="none"
                                     stroke={color}
                                     strokeWidth="2"
@@ -104,8 +110,8 @@ export const GitGraphTableRow: React.FC<{
                                 const endX = laneX(parentLane);
                                 const path =
                                     startX === endX
-                                        ? `M ${startX} 18 V ${ROW_HEIGHT}`
-                                        : `M ${startX} 18 C ${startX} 27, ${endX} 27, ${endX} ${ROW_HEIGHT}`;
+                                        ? `M ${startX} ${center} V ${rowHeight}`
+                                        : `M ${startX} ${center} C ${startX} ${curve}, ${endX} ${curve}, ${endX} ${rowHeight}`;
                                 return (
                                     <path
                                         key={`parent-${parentIndex}-${parentLane}`}
@@ -122,7 +128,7 @@ export const GitGraphTableRow: React.FC<{
                             })}
                             <circle
                                 cx={laneX(row.lane)}
-                                cy="18"
+                                cy={center}
                                 r="3.5"
                                 fill={color}
                             />

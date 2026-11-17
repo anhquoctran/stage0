@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import test from 'node:test';
-import { loadWithMocks } from './helpers/componentHarness.mjs';
+import { loadWithMocks, repositorySettingsFixture } from './helpers/componentHarness.mjs';
 
 const require = createRequire(import.meta.url);
 const { create } = require('zustand');
@@ -68,7 +68,7 @@ async function fixture(beforeSave = async () => {}) {
       return structuredClone([...records.values()].filter((item) => item.repo_id === args.repoId));
     }
     if (command === 'list_repo_labels') return labels.filter((label) => label.repo_id === args.repoId);
-    if (command === 'get_repo_settings') return null;
+    if (command === 'get_repository_settings_document') return repositorySettingsFixture(args.repoId, labels.filter((l) => l.repo_id === args.repoId));
     if (command === 'get_git_user_identity_cmd') return ['User', 'user@example.test'];
     return [];
   };

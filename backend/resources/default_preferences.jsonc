@@ -17,6 +17,7 @@
   "appearance": {
     "language": "en",
     "themeMode": "system",
+    "density": "standard",
     // Linux window frame: system follows the desktop theme; custom uses Stage0 controls.
     "linuxTitleBar": "system",
     "uiFont": { "fontFamily": "IBM Plex Sans" },

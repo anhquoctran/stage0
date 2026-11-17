@@ -15,16 +15,18 @@ alwaysApply: true
   checkpoint on a protected branch; move changes to a working branch first.
 - Start each new standard task by fetching `origin` and switching to a new approved
   branch from `origin/develop` in this same directory. Keep the hotfix exception below.
-- **Branch risk hierarchy**: `develop`/`feat/*`/`fix/*` (Highest risk, least stable) -> `nightly` (High risk) -> `beta` (Medium risk) -> `main` (Stable).
-- **SemVer vs. Stability**: `main` có thể không phải là bản có SemVer lớn nhất tại một thời điểm (do nightly/beta ra thường xuyên hơn), nhưng luôn là bản chính thức có độ ổn định cao nhất (`stable`).
-- **Never commit or push directly** to `main`, `beta`, `nightly`, or `develop`.
+- **Branch risk hierarchy**: `develop`/`feat/*`/`fix/*` (Highest risk, least stable) -> `beta` (Medium risk) -> `main` (Stable).
+- **SemVer vs. Stability**: `main` có thể không phải là bản có SemVer lớn nhất tại một thời điểm (do beta ra thường xuyên hơn), nhưng luôn là bản chính thức có độ ổn định cao nhất (`stable`).
+- **Never commit or push directly** to `main`, `beta`, or `develop`.
 - **Standard tasks**:
   - Branch off `origin/develop` using `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `perf/<slug>`, `docs/<slug>`, `test/<slug>`, or `chore/<slug>`.
   - Open Pull Requests into `develop` only.
 - **Hotfix exception**:
-  - Branch directly off the affected release branch (`origin/main`, `origin/beta`, or `origin/nightly`) as `hotfix/<target>/<slug>`.
-  - Open the primary PR into `<target>`, then synchronize the fix to all remaining branches (`main` -> `beta`, `nightly`, `develop`; `beta` -> `nightly`, `develop`; `nightly` -> `develop`).
+  - Branch directly off the affected release branch (`origin/main` or `origin/beta`) as `hotfix/<target>/<slug>`.
+  - Open the primary PR into `<target>`, then synchronize the fix to all remaining branches (`main` -> `beta`, `develop`; `beta` -> `develop`).
 
 - Critical fixes need behavior regression tests registered in `shared/release-regressions.json`.
 - Preserve protected target fixes/assertions; clean merges and green source builds alone do not establish regression safety.
 - Run the frozen target contracts and the complete candidate suites before release; skipped/empty/failed native checks block publication.
+
+Nightly is permanently retired. Release flow: checked Develop snapshots -> monthly Beta -> quarterly Stable.

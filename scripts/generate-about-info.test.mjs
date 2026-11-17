@@ -10,10 +10,10 @@ test('generated metadata imports its canonical type rather than recreating it', 
   assert.match(source, /export const SOFTWARE_ABOUT: SoftwareAboutInfo/);
 });
 
-test('computeAboutInfo places OS name immediately before arch name in version text', () => {
+test('computeAboutInfo includes only OS and architecture in version build metadata', () => {
   const info = computeAboutInfo();
 
-  // Pattern: <major>.<minor>.<patch>+<commit>.<os>.<arch>
+  // Pattern: <major>.<minor>.<patch>+<os>.<arch>
   const versionParts = info.version.split('+');
   assert.equal(versionParts.length, 2, 'Version should contain build metadata starting with +');
 
@@ -21,10 +21,25 @@ test('computeAboutInfo places OS name immediately before arch name in version te
   assert.equal(packageVersion, info.packageVersion);
 
   const metaParts = buildMeta.split('.');
-  assert.equal(metaParts.length, 3, 'Build metadata should be formatted as <commit>.<os>.<arch>');
-  assert.equal(metaParts[0], info.gitCommit, 'First part should be git commit');
-  assert.equal(metaParts[1], info.os, 'Second part should be OS name');
-  assert.equal(metaParts[2], info.arch, 'Third part should be architecture name');
+  assert.equal(metaParts.length, 2, 'Build metadata should be formatted as <os>.<arch>');
+  assert.equal(metaParts[0], info.os, 'First part should be OS name');
+  assert.equal(metaParts[1], info.arch, 'Second part should be architecture name');
+  assert.equal('gitCommit' in info, false, 'About metadata must not expose a commit digest');
+});
+
+test('GIT_COMMIT cannot change or reappear in generated version information', () => {
+  const previousCommit = process.env.GIT_COMMIT;
+  process.env.GIT_COMMIT = 'deadbeef';
+
+  try {
+    const info = computeAboutInfo({ os: 'windows', arch: 'x64' });
+    assert.equal(info.version, `${info.packageVersion}+windows.amd64`);
+    assert.equal(JSON.stringify(info).includes('deadbeef'), false);
+    assert.equal(Object.hasOwn(info, 'gitCommit'), false);
+  } finally {
+    if (previousCommit === undefined) delete process.env.GIT_COMMIT;
+    else process.env.GIT_COMMIT = previousCommit;
+  }
 });
 
 test('normalizes 64-bit architectures to amd64 and aarch64', () => {
@@ -34,7 +49,7 @@ test('normalizes 64-bit architectures to amd64 and aarch64', () => {
     assert.equal(info.arch, 'amd64', `Expected ${raw} to normalize to amd64`);
     assert.equal(
       info.version,
-      `${info.packageVersion}+${info.gitCommit}.linux.amd64`
+      `${info.packageVersion}+linux.amd64`
     );
   }
 
@@ -44,7 +59,7 @@ test('normalizes 64-bit architectures to amd64 and aarch64', () => {
     assert.equal(info.arch, 'aarch64', `Expected ${raw} to normalize to aarch64`);
     assert.equal(
       info.version,
-      `${info.packageVersion}+${info.gitCommit}.macos.aarch64`
+      `${info.packageVersion}+macos.aarch64`
     );
   }
 });
@@ -56,7 +71,7 @@ test('normalizes 32-bit architectures to i386 and arm', () => {
     assert.equal(info.arch, 'i386', `Expected ${raw} to normalize to i386`);
     assert.equal(
       info.version,
-      `${info.packageVersion}+${info.gitCommit}.windows.i386`
+      `${info.packageVersion}+windows.i386`
     );
   }
 
@@ -66,7 +81,7 @@ test('normalizes 32-bit architectures to i386 and arm', () => {
     assert.equal(info.arch, 'arm', `Expected ${raw} to normalize to arm`);
     assert.equal(
       info.version,
-      `${info.packageVersion}+${info.gitCommit}.linux.arm`
+      `${info.packageVersion}+linux.arm`
     );
   }
 });

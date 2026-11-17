@@ -70,7 +70,7 @@ export const RepositoryLabelsTab: React.FC = () => {
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            onClick={loadPresetLabels}
+            onClick={() => { void loadPresetLabels().catch((e) => showToast(String(e), 'error')); }}
             className="shrink-0 whitespace-nowrap px-2.5 py-1.5 bg-surface0 hover:bg-surface1 text-subtext0 hover:text-text text-xs transition-colors cursor-pointer border border-surface1 rounded-sm"
           >
             {translateUiText('git.repositoryLabels.loadPresets')}
@@ -255,7 +255,7 @@ export const RepositoryLabelsTab: React.FC = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => deleteRepoLabel(lbl.id)}
+                          onClick={() => { void deleteRepoLabel(lbl.id).catch((e) => showToast(String(e), 'error')); }}
                           className="p-1.5 text-subtext0 hover:bg-red-500/20 hover:text-red-400 cursor-pointer rounded-sm"
                           title={translateUiText('git.repositoryLabels.deleteNamed', { name: lbl.name })}
                           aria-label={translateUiText('git.repositoryLabels.deleteNamed', { name: lbl.name })}

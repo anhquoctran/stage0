@@ -1,9 +1,10 @@
-import { policy, releaseChannel } from './release-channels.mjs';
+import { policy } from './release-channels.mjs';
 import { releaseGit } from './release-history.mjs';
 import { promotionApi, InvalidReleaseCandidate } from './release-promotion-github.mjs';
 import { fetchPromotionSource } from './release-promotion-source.mjs';
 import { releasePeriod, inReleasePeriod, assertPeriodClosed, assertReleaseDay } from './release-period.mjs';
 import { readRollup, rollupCommits, composeRollup } from './release-rollup-tree.mjs';
+import { developmentInventory, fetchDevelopmentSource } from './release-development-source.mjs';
 
 export function rollupBranch(channel, date) {
   releasePeriod(channel, date);
@@ -20,20 +21,23 @@ export function rollupBranchDate(branch, channel) {
 }
 
 export function planRollup({ root, channel, releaseDate, baseSha, now = new Date(),
-  api = promotionApi, releases = api('releases?per_page=100', { paginated: true }), candidateFor = fetchPromotionSource }) {
+  api = promotionApi, releases, candidateFor }) {
   const window = releasePeriod(channel, releaseDate);
   assertPeriodClosed(window, now);
   if (!/^[a-f0-9]{40}$/.test(baseSha || '')) throw new Error('Invalid rollup base SHA');
   const from = policy.promotion.routes[channel].from;
-  const releasesInPeriod = releases.filter(release => {
+  const development = from === 'develop';
+  const inventory = releases ?? (development ? developmentInventory(root, window, api)
+    : api('releases?per_page=100', { paginated: true }));
+  const validate = candidateFor ?? (development ? fetchDevelopmentSource : fetchPromotionSource);
+  const releasesInPeriod = inventory.filter(release => {
     if (!inReleasePeriod(release, window)) return false;
-    try { return release.tag_name.startsWith('v') && releaseChannel(release.tag_name.slice(1)) === from; }
-    catch { return false; }
+    return development || new RegExp(`^v\\d+\\.\\d+\\.\\d+-${from}$`).test(release.tag_name);
   }).sort((a, b) => Date.parse(a.published_at) - Date.parse(b.published_at) || a.tag_name.localeCompare(b.tag_name));
   const sources = [], skipped = [];
   for (const release of releasesInPeriod) {
     let candidate;
-    try { candidate = candidateFor(root, release.tag_name, api, { release }); }
+    try { candidate = validate(root, release.tag_name, api, { release, period: window, channel: from }); }
     catch (error) {
       if (!(error instanceof InvalidReleaseCandidate)) throw error; // Network/auth/history errors never become an empty period.
       skipped.push({ tag: release.tag_name, reason: error.message });
@@ -41,7 +45,8 @@ export function planRollup({ root, channel, releaseDate, baseSha, now = new Date
     }
     sources.push({ tag: candidate.tag, tagSha: candidate.sha, sourceSha: candidate.sourceSha,
       publishedAt: candidate.release.published_at, runId: candidate.run.id,
-      runAttempt: candidate.run.run_attempt, completedAt: candidate.run.updated_at });
+      runAttempt: candidate.run.run_attempt, completedAt: candidate.run.updated_at,
+      ...(candidate.evidence ? { evidence: candidate.evidence } : {}) });
   }
   if (!sources.length) return null;
   return { schemaVersion: 1, channel, releaseDate, window, baseSha, sources, skipped,

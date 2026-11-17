@@ -58,6 +58,7 @@ impl Database {
         )?;
 
         conn.execute_batch(SCHEMA_SQL)?;
+        crate::features::virtual_mr::sync::migrate(&conn)?;
         // Legacy 'approved' was a display-only status and carried no reviewer verdict.
         // Reopen those rows so they can satisfy the explicit Resolved rules.
         conn.execute(

@@ -31,7 +31,7 @@ function isReleasePreparation(message) {
 
 /** Assembly bookkeeping is not a product change or a new source snapshot. */
 export function isReleaseMetadata(message) {
-  return isReleasePreparation(message) || (/^(?:Stage0 (?:rollup source|accumulate) v|chore\(release\): assemble (?:beta|stable) )/.test(message)
+  return isReleasePreparation(message) || (/^(?:Stage0 (?:rollup source|accumulate) |chore\(release\): assemble (?:beta|stable) )/.test(message)
     && /^Stage0-Rollup-Metadata: true$/m.test(message));
 }
 
@@ -58,6 +58,7 @@ export function sourceChanges(root, sourceSha, previousTag = '') {
 }
 
 export function previewBuildDecision({ root, channel, sourceSha, releases, tag = '', now = new Date() }) {
+  if (!Object.hasOwn(policy.channels, channel)) throw new Error('Unknown release channel');
   if (!Number.isFinite(now.getTime())) throw new Error('Invalid activity window time');
   const previousTag = previousChannelRelease(channel, releases, tag);
   if (channel === 'stable') return { shouldBuild: true, previousTag, reason: '' };
@@ -68,9 +69,5 @@ export function previewBuildDecision({ root, channel, sourceSha, releases, tag =
     const changed = sourceChanges(root, sourceSha, previousTag).length > 0;
     return { shouldBuild: changed, previousTag, reason: changed ? '' : 'No new source changes since the previous Beta' };
   }
-  const cutoff = now.getTime() - policy.previewActivityHours * 60 * 60 * 1000;
-  const recent = sourceChanges(root, sourceSha, previousTag)
-    .some(commit => commit.timestamp >= cutoff && commit.timestamp <= now.getTime());
-  return { shouldBuild: recent, previousTag, reason: recent ? ''
-    : `No new source commits in the last ${policy.previewActivityHours} hours for ${channel}` };
+  throw new Error('Unknown release channel');
 }

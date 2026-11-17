@@ -87,7 +87,7 @@ export function useRepositoryBotForm({
   const canSubmit = isAddingRepoBot && !inheritAgents && !!currentRepoId && !!repoBotName.trim()
     && (repoBotExecutionMode !== 'acp' || acpConfig.ready);
 
-  const handleSaveRepoCustomBot = (e: React.FormEvent) => {
+  const handleSaveRepoCustomBot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAddingRepoBot || inheritAgents || !repoBotName.trim() || !currentRepoId) return;
     if (
@@ -98,7 +98,8 @@ export function useRepositoryBotForm({
       return;
     }
 
-    addRepoCustomReviewer(currentRepoId, {
+    try {
+    await addRepoCustomReviewer(currentRepoId, {
       name: repoBotName.trim(),
       tagline: repoBotTagline.trim(),
       description: repoBotDesc.trim(),
@@ -115,6 +116,10 @@ export function useRepositoryBotForm({
       isBuiltin: false,
     });
 
+    } catch (error) {
+      showToast(String(error), 'error');
+      return;
+    }
     setIsAddingRepoBot(false);
     setRepoBotName('');
     setRepoBotTagline('');

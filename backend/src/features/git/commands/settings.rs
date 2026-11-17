@@ -1,4 +1,3 @@
-use crate::core::db::Database;
 use crate::features::git::persistence::{RepoLabelDb, RepoSettingsDb};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -15,62 +14,95 @@ pub async fn get_repo_settings(
     app: AppHandle,
     repo_id: String,
 ) -> Result<Option<RepoSettingsDb>, String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.get_repo_settings(&repo_id).map_err(|e| e.to_string())
+    let doc = super::super::repo_settings::commands::get_repository_settings_document(
+        app,
+        repo_id.clone(),
+    )
+    .await?;
+    if let Some(error) = doc.validation_error {
+        return Err(error);
     }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+    Ok(Some(RepoSettingsDb {
+        repo_id,
+        default_base_branch: doc.settings["defaultBaseBranch"].as_str().unwrap().into(),
+        inherit_global_agents: doc.settings["inheritGlobalAgents"].as_bool().unwrap(),
+        custom_agent_rules: doc.settings["customAgentRules"]
+            .as_str()
+            .map(str::to_string),
+    }))
 }
 
 #[tauri::command]
-pub async fn save_repo_settings(app: AppHandle, settings: RepoSettingsDb) -> Result<(), String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.save_repo_settings(&settings).map_err(|e| e.to_string())
-    }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+pub async fn save_repo_settings(
+    app: AppHandle,
+    settings: RepoSettingsDb,
+    expected_revision: Option<String>,
+) -> Result<(), String> {
+    super::super::repo_settings::commands::commit_repository_settings(
+        app,
+        settings.repo_id,
+        expected_revision.ok_or("A repository settings revision is required")?,
+        serde_json::json!({ "defaultBaseBranch": settings.default_base_branch,
+            "inheritGlobalAgents": settings.inherit_global_agents,
+            "customAgentRules": settings.custom_agent_rules.unwrap_or_default() }),
+    )
+    .await?;
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn list_repo_labels(app: AppHandle, repo_id: String) -> Result<Vec<RepoLabelDb>, String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.list_repo_labels(&repo_id).map_err(|e| e.to_string())
+    let doc = super::super::repo_settings::commands::get_repository_settings_document(app, repo_id)
+        .await?;
+    if let Some(error) = doc.validation_error {
+        return Err(error);
     }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+    Ok(doc.labels)
 }
 
 #[tauri::command]
-pub async fn create_repo_label(app: AppHandle, label: RepoLabelDb) -> Result<(), String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.create_repo_label(&label).map_err(|e| e.to_string())
-    }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+pub async fn create_repo_label(
+    app: AppHandle,
+    label: RepoLabelDb,
+    expected_revision: Option<String>,
+) -> Result<(), String> {
+    super::super::repo_settings::commands::mutate_legacy_label(
+        app,
+        Some(label),
+        None,
+        expected_revision,
+    )
+    .await
 }
 
 #[tauri::command]
-pub async fn update_repo_label(app: AppHandle, label: RepoLabelDb) -> Result<(), String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.update_repo_label(&label).map_err(|e| e.to_string())
-    }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+pub async fn update_repo_label(
+    app: AppHandle,
+    label: RepoLabelDb,
+    expected_revision: Option<String>,
+) -> Result<(), String> {
+    super::super::repo_settings::commands::mutate_legacy_label(
+        app,
+        Some(label),
+        None,
+        expected_revision,
+    )
+    .await
 }
 
 #[tauri::command]
-pub async fn delete_repo_label(app: AppHandle, id: String) -> Result<(), String> {
-    let result: Result<_, String> = async {
-        let db = app.state::<Database>();
-        db.delete_repo_label(&id).map_err(|e| e.to_string())
-    }
-    .await;
-    result.map_err(|error| crate::common::messages::command_error("git", error))
+pub async fn delete_repo_label(
+    app: AppHandle,
+    id: String,
+    expected_revision: Option<String>,
+) -> Result<(), String> {
+    super::super::repo_settings::commands::mutate_legacy_label(
+        app,
+        None,
+        Some(id),
+        expected_revision,
+    )
+    .await
 }
 
 #[tauri::command]

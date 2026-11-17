@@ -7,11 +7,12 @@ import { composeRollup } from './release-rollup-tree.mjs';
 export function createRollupPullRequest({ root, channel, releaseDate, now = new Date(), api = promotionApi }) {
   const route = policy.promotion.routes[channel];
   if (!route) throw new Error('Only beta/stable period rollups are supported');
+  const sourceKind = route.from === 'develop' ? 'develop snapshots' : `${route.from} releases`;
   const branch = rollupBranch(channel, releaseDate);
   releaseGit(root, 'fetch', 'origin', `refs/heads/${route.branch}`);
   const baseSha = releaseGit(root, 'rev-parse', 'FETCH_HEAD^{commit}');
   const manifest = planRollup({ root, channel, releaseDate, baseSha, now, api });
-  if (!manifest) return { skipped: true, reason: 'No eligible published source builds in this period' };
+  if (!manifest) return { skipped: true, reason: 'No eligible tested source snapshots in this period' };
   const composed = composeRollup(root, manifest);
   if (!composed.changed) return { skipped: true, reason: 'All eligible changes are already in the target; no new source changes' };
   const existing = api(`pulls?state=open&base=${route.branch}&head=anhquoctran:${encodeURIComponent(branch)}`);
@@ -22,10 +23,10 @@ export function createRollupPullRequest({ root, channel, releaseDate, now = new 
     releaseGit(root, 'push', 'origin', `${composed.sha}:refs/heads/${branch}`);
     pr = api('pulls', { method: 'POST', body: { base: route.branch, head: branch,
       title: `release: ${channel} rollup ${releaseDate}`,
-      body: `Accumulate **all ${manifest.sources.length} eligible ${route.from} releases** published in `
+      body: `Accumulate **all ${manifest.sources.length} eligible ${sourceKind}** ${route.from === 'develop' ? 'merged' : 'published'} in `
         + `[${manifest.window.start}, ${manifest.window.end}) UTC.\n\n`
         + `Unique new commits: **${manifest.commits.length}**. The frozen ledger in \`.github/release-rollup.json\` records every tag, source SHA, build run, commit and rejected build.\n\n`
-        + `Source releases: ${manifest.sources.map(source => source.tag).join(', ')}.\n\n`
+        + `Source snapshots: ${manifest.sources.map(source => source.tag).join(', ')}.\n\n`
         + (manifest.skipped.length ? `Rejected builds: ${manifest.skipped.map(source => `${source.tag}: ${source.reason}`).join('; ')}.\n\n` : '')
         + '**Maintainer activation:** Close and reopen this bot-authored PR once to trigger CodeQL. '
         + 'Review all changes/known regressions; green CI alone is not a stability verdict. '

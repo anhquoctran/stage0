@@ -13,7 +13,7 @@ import { prepareManualRelease } from './manual-release.mjs';
 import { prepareScheduledBranch } from './prepare-release.mjs';
 
 export function candidateFixture() {
-  const sha = 'a'.repeat(40), tag = 'v0.0.8-nightly';
+  const sha = 'a'.repeat(40), tag = 'v0.0.8-beta';
   const asset = name => ({ name, size: 50, state: 'uploaded', updated_at: '2026-11-01T00:00:00Z' });
   const assets = [asset('latest.json'), asset('SHA256SUMS.txt')];
   for (const [target, extensions] of Object.entries(releaseTargets)) {
@@ -32,7 +32,7 @@ export function candidateFixture() {
 }
 
 test('only adjacent channel tags are valid frozen promotion refs', () => {
-  assert.equal(parsePromotionBranch('promotion/beta/v0.0.8-nightly', 'beta'), 'v0.0.8-nightly');
+  assert.equal(parsePromotionBranch(`promotion/beta/develop/pr-10/${'a'.repeat(40)}`, 'beta'), `develop/pr-10/${'a'.repeat(40)}`);
   assert.equal(parsePromotionBranch('promotion/stable/v0.0.9-beta', 'stable'), 'v0.0.9-beta');
   for (const [branch, channel] of [['develop', 'beta'], ['promotion/stable/v0.0.8-nightly', 'stable'],
     ['promotion/beta/v0.0.1', 'beta'], ['promotion/nightly/v0.0.9-beta', 'nightly'],
@@ -92,7 +92,7 @@ function gitFixture(t) {
   seedRegressionFixture(root);
   fs.writeFileSync(path.join(root, 'app.txt'), 'original'); git('add', '.'); git('commit', '-m', 'Base');
   const base = git('rev-parse', 'HEAD');
-  git('checkout', '-b', 'nightly'); fs.writeFileSync(path.join(root, 'app.txt'), 'tested candidate');
+  git('checkout', '-b', 'candidate'); fs.writeFileSync(path.join(root, 'app.txt'), 'tested candidate');
   git('commit', '-am', 'Candidate'); const source = git('rev-parse', 'HEAD');
   return { root, git, base, source };
 }
@@ -133,15 +133,15 @@ function approvedFixture(t) {
   const f = gitFixture(t), evidence = candidateFixture();
   f.git('remote', 'add', 'origin', f.root);
   fs.writeFileSync(path.join(f.root, 'RELEASE_NOTES.md'), 'Generated release notes');
-  f.git('add', '.'); f.git('commit', '-m', 'chore: prepare v0.0.8-nightly', '-m',
-    `Stage0-Release-Channel: nightly\nStage0-Source-Commit: ${f.source}`);
-  const snapshot = f.git('rev-parse', 'HEAD'); f.git('tag', 'v0.0.8-nightly');
+  f.git('add', '.'); f.git('commit', '-m', 'chore: prepare v0.0.8-beta', '-m',
+    `Stage0-Release-Channel: beta\nStage0-Source-Commit: ${f.source}`);
+  const snapshot = f.git('rev-parse', 'HEAD'); f.git('tag', 'v0.0.8-beta');
   f.git('checkout', 'main'); f.git('merge', '--no-ff', f.source, '-m', 'Merge approved promotion');
   const merged = f.git('rev-parse', 'HEAD'); f.git('branch', 'beta', merged);
   const repo = { full_name: 'anhquoctran/stage0' };
   const pr = { number: 10, draft: false, merged: true, merged_at: '2026-11-03T00:00:00Z', state: 'closed', merge_commit_sha: merged,
-    user: { login: 'github-actions[bot]' }, head: { ref: 'hotfix/beta/tested-fix', sha: f.source, repo },
-    base: { ref: 'beta', sha: merged, repo }, body: 'Stage0-Candidate: v0.0.8-nightly\n- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.\n'
+    user: { login: 'github-actions[bot]' }, head: { ref: 'hotfix/main/tested-fix', sha: f.source, repo },
+    base: { ref: 'main', sha: merged, repo }, body: 'Stage0-Candidate: v0.0.8-beta\n- [x] Smoke-tested install/update, launch, diff and reviewer on supported platforms.\n'
       + '- [x] Reviewed changes and known issues; ready for this channel.',
   };
   const reviews = [{ user: { login: 'maintainer', type: 'User' }, state: 'APPROVED', commit_id: f.source,
@@ -166,10 +166,10 @@ function approvedFixture(t) {
   return { ...f, evidence, pr, reviews, statuses, api, merged };
 }
 
-test('approved frozen source authorizes Beta despite later PR base metadata; comments do not revoke approval', t => {
+test('approved frozen source authorizes Stable despite later PR base metadata; comments do not revoke approval', t => {
   const f = approvedFixture(t);
   f.reviews.push({ ...f.reviews[0], state: 'COMMENTED', submitted_at: '2026-11-02T02:00:00Z' });
-  const result = assertPublishedPromotion({ root: f.root, channel: 'beta', sourceSha: f.merged, api: f.api, now: new Date('2026-11-05') });
+  const result = assertPublishedPromotion({ root: f.root, channel: 'stable', sourceSha: f.merged, api: f.api, now: new Date('2026-11-12') });
   assert.equal(result.pr, 10); assert.equal(result.candidate.sourceSha, f.source);
   assert.equal(f.git('rev-parse', 'HEAD'), f.merged);
 });
@@ -185,24 +185,24 @@ test('publication revalidation rejects missing/stale/self approvals, unchecked Q
     'failed latest status': f => { f.statuses.unshift({ ...f.statuses[0], state: 'failure' }); },
     'forged status creator': f => { f.statuses[0].creator.login = 'maintainer'; },
     'approval after merge': f => { f.reviews[0].submitted_at = '2026-11-04T00:00:00Z'; },
-    'superseded source': f => { f.git('branch', '-f', 'beta', f.base); },
+    'superseded source': f => { f.git('update-ref', 'refs/heads/main', f.base); },
     'head moved': f => { f.pr.head.sha = f.base; },
     'wrong merge method': f => { f.pr.merge_commit_sha = f.source; },
   };
   for (const [name, mutate] of Object.entries(mutations)) await t.test(name, t => {
     const f = approvedFixture(t); mutate(f);
-    assert.throws(() => assertPublishedPromotion({ root: f.root, channel: 'beta', sourceSha: f.merged, api: f.api, now: new Date('2026-11-05') }));
+    assert.throws(() => assertPublishedPromotion({ root: f.root, channel: 'stable', sourceSha: f.merged, api: f.api, now: new Date('2026-11-12') }));
   });
 });
 
 test('a candidate tag containing untested source changes cannot certify its source parent', t => {
   const f = approvedFixture(t);
-  f.git('checkout', '--detach', 'v0.0.8-nightly');
-  fs.writeFileSync(path.join(f.root, 'app.txt'), 'not the source parent'); f.git('commit', '-am', 'chore: prepare v0.0.8-nightly', '-m',
-    `Stage0-Release-Channel: nightly\nStage0-Source-Commit: ${f.source}`);
+  f.git('checkout', '--detach', 'v0.0.8-beta');
+  fs.writeFileSync(path.join(f.root, 'app.txt'), 'not the source parent'); f.git('commit', '-am', 'chore: prepare v0.0.8-beta', '-m',
+    `Stage0-Release-Channel: beta\nStage0-Source-Commit: ${f.source}`);
   // A two-parent/provenance mismatch is rejected before API evidence is consulted.
-  f.git('tag', '-f', 'v0.0.8-nightly');
-  assert.throws(() => assertPublishedPromotion({ root: f.root, channel: 'beta', sourceSha: f.merged, api: f.api, now: new Date('2026-11-05') }));
+  f.git('tag', '-f', 'v0.0.8-beta');
+  assert.throws(() => assertPublishedPromotion({ root: f.root, channel: 'stable', sourceSha: f.merged, api: f.api, now: new Date('2026-11-12') }));
 });
 
 test('trusted PR workflow posts success/failure to the exact head SHA, never the base SHA', t => {
@@ -210,7 +210,7 @@ test('trusted PR workflow posts success/failure to the exact head SHA, never the
   f.pr.base.sha = f.base; f.pr.state = 'open'; f.pr.merged = false;
   const data = path.join(f.root, 'api.json'), log = path.join(f.root, 'requests.jsonl');
   const event = path.join(f.root, 'event.json'); fs.writeFileSync(event, '{"number":10}');
-  const endpoints = ['pulls/10', 'releases/tags/v0.0.8-nightly',
+  const endpoints = ['pulls/10', 'releases/tags/v0.0.8-beta',
     `actions/workflows/release.yml/runs?head_sha=${f.evidence.runs[0].head_sha}&per_page=100`,
     'actions/runs/1/attempts/1/jobs?per_page=100',
     'code-scanning/analyses?ref=refs%2Fpull%2F10%2Fhead&tool_name=CodeQL&per_page=100',
@@ -240,7 +240,7 @@ test('trusted PR workflow posts success/failure to the exact head SHA, never the
   assert.deepEqual(requests.map(r => r.body.state), ['pending', 'success']);
   assert.ok(requests.every(r => r.endpoint === `statuses/${f.source}`));
   assert.ok(requests.every(r => r.body.context === 'Release promotion policy'));
-  responses['pulls/10'].body = 'Stage0-Candidate: v0.0.8-nightly\n'; fs.writeFileSync(data, JSON.stringify(responses));
+  responses['pulls/10'].body = 'Stage0-Candidate: v0.0.8-beta\n'; fs.writeFileSync(data, JSON.stringify(responses));
   assert.throws(() => execFileSync(process.execPath, [...mock, fileURLToPath(entry), 'check-pr'], { cwd: f.root, env, stdio: 'pipe' }), /checklist/);
   requests = fs.readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
   assert.equal(requests.at(-1).body.state, 'failure');

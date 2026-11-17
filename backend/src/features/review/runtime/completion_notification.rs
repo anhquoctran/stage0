@@ -61,11 +61,18 @@ fn payload(
     })
 }
 
+pub(super) fn should_notify(run: &ReviewRun) -> bool {
+    !(run.reply_discussion_id.is_some() && run.status == "completed" && !run.published)
+}
+
 pub(in crate::features::review) async fn send(
     app: AppHandle,
     run: ReviewRun,
     history_available: bool,
 ) {
+    if !should_notify(&run) {
+        return;
+    }
     if !matches!(
         run.status.as_str(),
         "completed" | "partial" | "failed" | "incomplete"

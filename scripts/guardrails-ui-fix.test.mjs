@@ -1,3 +1,4 @@
+import { readStylesheet } from './helpers/readStylesheet.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -77,10 +78,7 @@ test('GuardrailsCommandSection sliders use accent-brand', () => {
 });
 
 test('index.css enforces brand purple color for range sliders globally', () => {
-  const cssSrc = readFileSync(
-    new URL('../frontend/core/styles/index.css', import.meta.url),
-    'utf-8'
-  );
+  const cssSrc = readStylesheet(new URL('../frontend/core/styles/index.css', import.meta.url));
 
   assert.match(cssSrc, /input\[type="range"\]\s*\{\s*accent-color:\s*var\(--color-brand\)/);
 });

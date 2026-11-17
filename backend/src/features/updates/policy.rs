@@ -2,9 +2,6 @@ use tauri::utils::{config::BundleType, platform::bundle_type};
 
 pub(super) fn manifest_url(version: &str) -> &'static str {
     match channel(version) {
-        Some("nightly") => {
-            "https://github.com/anhquoctran/stage0/releases/download/channel-nightly/latest.json"
-        }
         Some("beta") => {
             "https://github.com/anhquoctran/stage0/releases/download/channel-beta/latest.json"
         }
@@ -16,8 +13,6 @@ fn channel(version: &str) -> Option<&'static str> {
     let version = semver::Version::parse(version).ok()?;
     if version.pre.is_empty() {
         Some("stable")
-    } else if version.pre.as_str() == "nightly" || version.pre.as_str().starts_with("nightly.") {
-        Some("nightly")
     } else if version.pre.as_str() == "beta" || version.pre.as_str().starts_with("beta.") {
         Some("beta")
     } else {

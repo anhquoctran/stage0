@@ -66,6 +66,12 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
     validate_optional_bool(general, "addToPath", "general")?;
 
     let appearance = object_section(value, "appearance")?;
+    validate_optional_enum(
+        appearance,
+        "density",
+        "appearance",
+        &["standard", "compact", "touch"],
+    )?;
     if let Some(language) = appearance.get("language") {
         let language = language.as_str().ok_or_else(|| {
             crate::common::messages::failure(
@@ -108,6 +114,29 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
                 serde_json::json!({}),
                 "appearance.themeMode must be 'system', 'dark', or 'light'".into(),
             ));
+        }
+    }
+    for key in ["darkThemeId", "lightThemeId"] {
+        if let Some(theme_id) = appearance.get(key) {
+            let valid = theme_id.as_str().is_some_and(|id| {
+                let mut parts = id.split('-');
+                let first = parts.next().unwrap_or_default();
+                !id.is_empty()
+                    && id.len() <= 64
+                    && first
+                        .bytes()
+                        .next()
+                        .is_some_and(|byte| byte.is_ascii_lowercase())
+                    && parts.chain(std::iter::once(first)).all(|part| {
+                        !part.is_empty()
+                            && part
+                                .bytes()
+                                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+                    })
+            });
+            if !valid {
+                return Err(format!("appearance.{key} must be a valid theme id"));
+            }
         }
     }
     if let Some(font) = appearance.get("viewerFont") {
@@ -204,6 +233,7 @@ pub(super) fn validate_schema(value: &Value) -> Result<(), String> {
             validate_optional_string(config, "reviewerInstructions", "ai.aiConfig", 32_000, true)?;
             validate_optional_bool(config, "streamResponse", "ai.aiConfig")?;
             validate_optional_bool(config, "enableCodeReviewAssist", "ai.aiConfig")?;
+            validate_optional_bool(config, "localReviewContext", "ai.aiConfig")?;
         }
     }
     if let Some(servers) = ai.get("mcpServers") {

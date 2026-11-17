@@ -1,3 +1,4 @@
+import type { UiDensity } from './UiDensity';
 import type { LinuxTitleBarMode } from '../../../core/types/LinuxTitleBarMode';
 import type { MarkdownFontSettings } from './MarkdownFontSettings';
 import type { ViewerFontSettings } from './ViewerFontSettings';
@@ -6,6 +7,7 @@ import type { KeymapSettings } from '../../../core/types/keymaps/KeymapSettings'
 export interface PreferencesState extends ViewerFontSettings {
   keymap: KeymapSettings;
   uiFontFamily: string;
+  uiDensity: UiDensity;
   linuxTitleBar: LinuxTitleBarMode;
   isPreferencesOpen: boolean;
   setIsPreferencesOpen: (open: boolean) => void;

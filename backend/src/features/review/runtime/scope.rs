@@ -1,7 +1,7 @@
 use super::tool_state::ReviewToolState;
 use crate::{
     core::db::Database,
-    features::review::{mentions, ReviewRequest, ReviewToolCall},
+    features::review::{discussion_reply, mentions, ReviewRequest, ReviewToolCall},
 };
 
 pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<(), String> {
@@ -34,16 +34,14 @@ pub(crate) fn validate_request(db: &Database, config: &ReviewRequest) -> Result<
             .ok_or_else(|| {
                 crate::common::messages::code("backend.review.openDiscussionNotFound")
             })?;
-        let latest = thread.comments.last().ok_or_else(|| {
+        thread.comments.last().ok_or_else(|| {
             crate::common::messages::code("backend.review.discussionHasNoComment")
         })?;
-        if !mentions::can_reply_to_comment(
+        if !discussion_reply::can_reply(
             &db.conn(),
             &config.session_id,
             config.reviewer_id.as_deref(),
-            &latest.author_type,
-            &latest.author_id,
-            &latest.body,
+            &thread.id,
         ) {
             return Err(crate::common::messages::code(
                 "backend.review.commentNotAddressedToReviewer",
@@ -122,10 +120,7 @@ fn validate_manual_review_request(
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
         .map_err(|_| crate::common::messages::code("backend.review.manualReviewNoRootComment"))?;
-    if author_type != "user"
-        || !mentions::is_manual_review_command(&body)
-        || !mentions::has_reviewer_mention(&body, reviewer_id)
-    {
+    if author_type != "user" || !mentions::manual_review_targets_reviewer(&body, reviewer_id) {
         return Err(crate::common::messages::failure(
             "backend.review.manualReviewCommandInvalid",
             serde_json::json!({}),
@@ -169,10 +164,23 @@ pub(super) fn configure(
 }
 
 pub(super) fn validate_call(state: &ReviewToolState, call: &ReviewToolCall) -> Result<(), String> {
+    if !state.description_updated
+        && matches!(
+            call.name.as_str(),
+            "create_review_discussion" | "reply_to_discussion" | "resolve_discussion"
+        )
+    {
+        return Err("Generate the required MR description before discussion actions".into());
+    }
+    if state.finalizing && call.name != "submit_review" {
+        return Err("The remaining review budget is reserved for submit_review".into());
+    }
     if let Some(id) = state.reply_discussion_id.as_deref() {
         if !matches!(
             call.name.as_str(),
             "list_open_discussions"
+                | "list_review_feedback"
+                | "classify_review_feedback"
                 | "read_discussion_comment"
                 | "get_file_diff"
                 | "read_file_range"

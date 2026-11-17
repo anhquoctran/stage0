@@ -5,13 +5,19 @@ pub mod connectors;
 pub mod context;
 pub mod coordinator;
 mod debug_log;
+mod discussion_reply;
 mod discussion_revision;
+mod discussion_scope;
 pub(crate) mod discussion_snippets;
+pub mod feedback;
 mod input_screen;
+pub mod local_context;
+mod manual_command;
 mod mentions;
 pub mod model_adapter;
 mod model_failure;
 mod native_model_adapter;
+mod output_language;
 pub mod persistence;
 pub mod provider;
 mod review_finding;
@@ -36,4 +42,4 @@ mod fixture_acp_adapter;
 #[cfg(test)]
 mod fixture_cli_adapter;
 #[cfg(test)]
-mod test_repo;
+pub(crate) mod test_repo;

@@ -33,7 +33,9 @@ The atomic replacement of preferences.json is the sole commit point. Before it,
 all prepared items are unreachable and the old snapshot remains active. After it,
 all referenced mappings and Keychain objects have already been acknowledged.
 File contents and the parent directory are synchronized on Unix; Windows uses
-write-through replacement. A flush error after replacement is reported as an
+write-through replacement when available, with a standard-library POSIX rename
+fallback and post-rename file flush when an existing reader prevents legacy
+replacement. Open readers retain their original snapshots. A flush error after replacement is reported as an
 indeterminate durable outcome, reconciled from disk, and never followed by a
 compensating overwrite or deletion of potentially committed credentials.
 

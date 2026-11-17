@@ -4,7 +4,7 @@ use super::{MAX_JSON_DEPTH, MAX_PREFERENCES_BYTES, SUPPORTED_SCHEMA_VERSION};
 use jsonc_parser::{parse_to_serde_value, ParseOptions};
 use serde_json::Value;
 
-pub(super) fn strict_jsonc_options() -> ParseOptions {
+pub(crate) fn strict_jsonc_options() -> ParseOptions {
     ParseOptions {
         allow_comments: true,
         allow_loose_object_property_names: false,

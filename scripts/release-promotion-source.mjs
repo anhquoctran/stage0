@@ -1,12 +1,14 @@
-import { releaseChannel } from './release-channels.mjs';
 import { releaseGit, releaseSource } from './release-history.mjs';
 import { promotionApi, candidateEvidence, InvalidReleaseCandidate } from './release-promotion-github.mjs';
 
 /** Fetch objects only. Never checkout or execute a candidate's scripts/workflow. */
-export function fetchPromotionSource(root, tag, api = promotionApi, evidenceOptions) {
+export function fetchPromotionSource(root, tag, api = promotionApi, evidenceOptions = {}) {
   if (typeof tag !== 'string') throw new InvalidReleaseCandidate('Select a published candidate tag');
-  releaseChannel(tag.slice(1));
-  if (!/^v\d+\.\d+\.\d+-(nightly|beta)$/.test(tag)) throw new InvalidReleaseCandidate('Invalid preview candidate tag');
+  // The configured source channel is data; retired snapshots can still be audited.
+  const channel = evidenceOptions.channel ?? 'beta';
+  if (!/^[a-z]+$/.test(channel) || !new RegExp(`^v\\d+\\.\\d+\\.\\d+-${channel}$`).test(tag)) {
+    throw new InvalidReleaseCandidate('Invalid preview candidate tag');
+  }
   releaseGit(root, 'fetch', 'origin', `refs/tags/${tag}`);
   const sha = releaseGit(root, 'rev-parse', 'FETCH_HEAD^{commit}');
   const sourceSha = releaseSource(root, sha);

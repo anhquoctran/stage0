@@ -5,13 +5,17 @@ import { type SandboxType } from '../../git/types/SandboxType';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 import type { PreferencesDraftSessionContext } from './PreferencesDraftSessionContext';
 import { DEFAULT_KEYMAP } from '../../../core/services/keymaps/catalog';
+import { DEFAULT_UI_DENSITY } from '../utils/uiDensity';
 import { DEFAULT_UI_FONT_FAMILY } from '../constants/uiFonts';
 
 export function usePreferencesDraftSession({
   storedKeymap = DEFAULT_KEYMAP,
   storedUiFontFamily = DEFAULT_UI_FONT_FAMILY,
+  storedUiDensity = DEFAULT_UI_DENSITY,
   storedLinuxTitleBar = 'system',
   storedThemeMode,
+  storedDarkThemeId = 'catppuccin-mocha',
+  storedLightThemeId = 'catppuccin-latte',
   storedFontFamily,
   storedFontSize,
   storedIsBold,
@@ -44,10 +48,12 @@ export function usePreferencesDraftSession({
 }: PreferencesDraftSessionContext) {
   const [draftKeymap, setDraftKeymap] = useState(storedKeymap);
   const [draftUiFontFamily, setDraftUiFontFamily] = useState(storedUiFontFamily);
+  const [draftUiDensity, setDraftUiDensity] = useState(storedUiDensity);
   const [draftLinuxTitleBar, setDraftLinuxTitleBar] = useState(storedLinuxTitleBar);
   const [draftThemeMode, setDraftThemeMode] = useState<ThemeMode>(storedThemeMode);
+  const [draftDarkThemeId, setDraftDarkThemeId] = useState(storedDarkThemeId);
+  const [draftLightThemeId, setDraftLightThemeId] = useState(storedLightThemeId);
 
-  const [draftThemeId, setDraftThemeId] = useState('catppuccin-mocha');
 
   const [draftFontFamily, setDraftFontFamily] = useState(storedFontFamily);
 
@@ -94,8 +100,11 @@ export function usePreferencesDraftSession({
   const [savedBaseline, setSavedBaseline] = useState<PreferencesBaseline>({
     keymap: storedKeymap,
     uiFontFamily: storedUiFontFamily,
+    uiDensity: storedUiDensity,
     linuxTitleBar: storedLinuxTitleBar,
     themeMode: storedThemeMode,
+    darkThemeId: storedDarkThemeId,
+    lightThemeId: storedLightThemeId,
     fontFamily: storedFontFamily,
     fontSize: storedFontSize,
     isBold: storedIsBold,
@@ -133,8 +142,11 @@ export function usePreferencesDraftSession({
         wasOpenRef.current = true;
         setDraftKeymap(storedKeymap);
         setDraftUiFontFamily(storedUiFontFamily);
+        setDraftUiDensity(storedUiDensity);
         setDraftLinuxTitleBar(storedLinuxTitleBar);
         setDraftThemeMode(storedThemeMode);
+        setDraftDarkThemeId(storedDarkThemeId);
+        setDraftLightThemeId(storedLightThemeId);
         setDraftFontFamily(storedFontFamily);
         setDraftFontSize(storedFontSize);
         setDraftIsBold(storedIsBold);
@@ -164,8 +176,11 @@ export function usePreferencesDraftSession({
         setSavedBaseline({
           keymap: storedKeymap,
           uiFontFamily: storedUiFontFamily,
-    linuxTitleBar: storedLinuxTitleBar,
+          uiDensity: storedUiDensity,
+          linuxTitleBar: storedLinuxTitleBar,
           themeMode: storedThemeMode,
+          darkThemeId: storedDarkThemeId,
+          lightThemeId: storedLightThemeId,
           fontFamily: storedFontFamily,
           fontSize: storedFontSize,
           isBold: storedIsBold,
@@ -216,8 +231,11 @@ export function usePreferencesDraftSession({
     isPreferencesOpen,
     storedKeymap,
     storedUiFontFamily,
+    storedUiDensity,
     storedLinuxTitleBar,
     storedThemeMode,
+    storedDarkThemeId,
+    storedLightThemeId,
     storedFontFamily,
     storedFontSize,
     storedIsBold,
@@ -245,6 +263,8 @@ export function usePreferencesDraftSession({
   return {
     draftKeymap,
     draftUiFontFamily,
+    draftUiDensity,
+    setDraftUiDensity,
     draftLinuxTitleBar,
     setDraftLinuxTitleBar,
     setDraftUiFontFamily,
@@ -259,6 +279,8 @@ export function usePreferencesDraftSession({
     draftAddToPath,
     setDraftAddToPath,
     draftThemeMode,
+    draftDarkThemeId,
+    draftLightThemeId,
     draftFontFamily,
     draftFontSize,
     draftIsBold,
@@ -279,6 +301,8 @@ export function usePreferencesDraftSession({
     setSavedBaseline,
     setShowRestartPrompt,
     setDraftThemeMode,
+    setDraftDarkThemeId,
+    setDraftLightThemeId,
     setDraftFontFamily,
     setDraftFontSize,
     setDraftIsBold,
@@ -297,8 +321,6 @@ export function usePreferencesDraftSession({
     showResetConfirm,
     isApplied,
     showRestartPrompt,
-    draftThemeId,
-    setDraftThemeId,
     draftDiffViewMode,
     setDraftDiffViewMode,
     draftIgnoreWhitespace,

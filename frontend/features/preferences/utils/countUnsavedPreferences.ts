@@ -1,3 +1,5 @@
+import type { UiDensity } from '../types/UiDensity';
+import { DEFAULT_UI_DENSITY } from './uiDensity';
 import type { PreferencesBaseline } from '../types/PreferencesBaseline';
 
 export function countUnsavedPreferences(
@@ -8,8 +10,11 @@ export function countUnsavedPreferences(
     explorerContextMenu?: boolean;
     addToPath?: boolean;
     uiFontFamily?: string;
+    uiDensity?: UiDensity;
     linuxTitleBar?: string;
     themeMode: string;
+    darkThemeId?: string;
+    lightThemeId?: string;
     fontFamily: string;
     fontSize: number;
     isBold: boolean;
@@ -29,6 +34,7 @@ export function countUnsavedPreferences(
   aiChangeCount: number
 ): number {
   let count = aiChangeCount;
+  if (draft.uiDensity !== undefined && draft.uiDensity !== (baseline.uiDensity ?? DEFAULT_UI_DENSITY)) count++;
   if (draft.linuxTitleBar !== undefined && draft.linuxTitleBar !== baseline.linuxTitleBar) count++;
   if (draft.uiFontFamily !== undefined && draft.uiFontFamily !== baseline.uiFontFamily) count++;
   if (draft.showInlineBlame !== baseline.showInlineBlame) count++;
@@ -37,6 +43,8 @@ export function countUnsavedPreferences(
   if (draft.explorerContextMenu !== undefined && draft.explorerContextMenu !== baseline.explorerContextMenu) count++;
   if (draft.addToPath !== undefined && draft.addToPath !== baseline.addToPath) count++;
   if (draft.themeMode !== baseline.themeMode) count++;
+  if (draft.darkThemeId !== undefined && draft.darkThemeId !== baseline.darkThemeId) count++;
+  if (draft.lightThemeId !== undefined && draft.lightThemeId !== baseline.lightThemeId) count++;
   if (draft.fontFamily !== baseline.fontFamily) count++;
   if (draft.fontSize !== baseline.fontSize) count++;
   if (draft.isBold !== baseline.isBold) count++;

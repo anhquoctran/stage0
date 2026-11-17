@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stage0.app/schemas/theme-v1.json",
+  "title": "Stage0 Theme Package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "kind",
+    "version",
+    "colors"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+      "not": {
+        "enum": [
+          "mocha",
+          "mocha-light",
+          "latte",
+          "dark",
+          "light",
+          "system"
+        ]
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "kind": {
+      "enum": [
+        "dark",
+        "light"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "maxLength": 32,
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "$ref": "#/$defs/color"
+        },
+        "blue": {
+          "$ref": "#/$defs/color"
+        },
+        "brand": {
+          "$ref": "#/$defs/color"
+        },
+        "crust": {
+          "$ref": "#/$defs/color"
+        },
+        "flamingo": {
+          "$ref": "#/$defs/color"
+        },
+        "green": {
+          "$ref": "#/$defs/color"
+        },
+        "lavender": {
+          "$ref": "#/$defs/color"
+        },
+        "mantle": {
+          "$ref": "#/$defs/color"
+        },
+        "maroon": {
+          "$ref": "#/$defs/color"
+        },
+        "mauve": {
+          "$ref": "#/$defs/color"
+        },
+        "on-accent": {
+          "$ref": "#/$defs/color"
+        },
+        "overlay0": {
+          "$ref": "#/$defs/color"
+        },
+        "overlay1": {
+          "$ref": "#/$defs/color"
+        },
+        "overlay2": {
+          "$ref": "#/$defs/color"
+        },
+        "peach": {
+          "$ref": "#/$defs/color"
+        },
+        "pink": {
+          "$ref": "#/$defs/color"
+        },
+        "red": {
+          "$ref": "#/$defs/color"
+        },
+        "rosewater": {
+          "$ref": "#/$defs/color"
+        },
+        "sapphire": {
+          "$ref": "#/$defs/color"
+        },
+        "sky": {
+          "$ref": "#/$defs/color"
+        },
+        "subtext0": {
+          "$ref": "#/$defs/color"
+        },
+        "subtext1": {
+          "$ref": "#/$defs/color"
+        },
+        "surface0": {
+          "$ref": "#/$defs/color"
+        },
+        "surface1": {
+          "$ref": "#/$defs/color"
+        },
+        "surface2": {
+          "$ref": "#/$defs/color"
+        },
+        "teal": {
+          "$ref": "#/$defs/color"
+        },
+        "text": {
+          "$ref": "#/$defs/color"
+        },
+        "yellow": {
+          "$ref": "#/$defs/color"
+        },
+        "diff-added-background": {
+          "$ref": "#/$defs/color"
+        },
+        "diff-deleted-background": {
+          "$ref": "#/$defs/color"
+        },
+        "interactive-input-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "backdrop-modal": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-card-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-card-border": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-choice-selected-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-choice-selected-border": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-danger-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-danger-border": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-danger-text": {
+          "$ref": "#/$defs/color"
+        },
+        "preferences-danger-icon-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-text": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-subtext": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-status": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-muted": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-brand": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-title-accent": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-logo-border": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-track-border": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-track-bg": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-frame-border": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-glow-blue": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-glow-purple": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-peach": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-teal": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-green": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-error": {
+          "$ref": "#/$defs/color"
+        },
+        "splash-warning": {
+          "$ref": "#/$defs/color"
+        },
+        "primary-hover": {
+          "$ref": "#/$defs/color"
+        },
+        "primary-active": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-text": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-keyword": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-title": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-string": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-number": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-builtin": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-comment": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-variable": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-meta": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-punctuation": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-property": {
+          "$ref": "#/$defs/color"
+        },
+        "syntax-params": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|rgba?\\([0-9.,\\s]+\\))$",
+      "description": "Runtime additionally enforces RGB 0\u2013255 and alpha 0\u20131."
+    }
+  }
+}

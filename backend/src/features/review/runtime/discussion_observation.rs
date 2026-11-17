@@ -7,17 +7,28 @@ pub(super) struct DiscussionObservation {
     pub target_id: String,
     ends: HashMap<String, usize>,
     complete: HashSet<String>,
+    required: HashSet<String>,
 }
 
 impl DiscussionObservation {
     pub fn new(revision: String, root_id: String, target_id: String) -> Self {
+        let required = HashSet::from([root_id.clone(), target_id.clone()]);
         Self {
+            required,
             revision,
             root_id,
             target_id,
             ends: HashMap::new(),
             complete: HashSet::new(),
         }
+    }
+
+    pub fn require(&mut self, ids: impl IntoIterator<Item = String>) {
+        self.required.extend(ids);
+    }
+
+    pub fn tracks(&self, id: &str) -> bool {
+        self.required.contains(id)
     }
 
     pub fn record(&mut self, id: &str, offset: usize, end: usize, total: usize) {
@@ -39,6 +50,11 @@ impl DiscussionObservation {
         }
         if !self.complete.contains(&self.root_id) || !self.complete.contains(&self.target_id) {
             return Err("Read the complete root and latest comment with read_discussion_comment before acting.".into());
+        }
+        if !self.required.is_subset(&self.complete) {
+            return Err(
+                "Read the complete conversation history before remembering a preference.".into(),
+            );
         }
         Ok(())
     }

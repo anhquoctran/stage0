@@ -1,5 +1,6 @@
 import { useTranslation as useUiTextTranslation } from 'react-i18next';
 import React from 'react';
+import { LocalReviewContextSettings } from '../../../review/components/LocalReviewContextSettings';
 import { SettingRow } from '../SettingRow';
 import { ZedSwitch } from '../ZedSwitch';
 import { ChevronRight } from '../../../../common/components/icons/ChevronRight';
@@ -18,6 +19,7 @@ export const PreferencesAiOverviewTab: React.FC<{
   const { t: translateUiText } = useUiTextTranslation();
   return (
     <div className="space-y-3">
+      <LocalReviewContextSettings enabled={draftAiConfig.localReviewContext === true} onChange={(enabled) => setDraftAiConfig((previous) => ({ ...previous, localReviewContext: enabled }))} />
       <SettingRow
         title={translateUiText('preferences.nav.ai-providers')}
         description={translateUiText('preferences.aiOverview.providersDescription')}

@@ -1,3 +1,4 @@
+import { themeColorScheme } from '../../../core/themes/catalog';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DiffView, DiffModeEnum } from '@git-diff-view/react';
@@ -24,7 +25,7 @@ export function CommitFileDiff({ file, rawDiff, controls, notice }: {
       </div>
       {notice ?? (file.is_binary ? <p className="p-4 text-xs text-subtext0">{t('git.commitDetails.binaryFile')}</p>
         : hunks.length ? <div className="overflow-x-auto"><DiffView data={data} diffViewMode={DiffModeEnum.Unified}
-          diffViewTheme={theme === 'mocha' ? 'dark' : 'light'} diffViewHighlight diffViewWrap={false} diffViewFontSize={13} /></div>
+          diffViewTheme={themeColorScheme(theme)} diffViewHighlight diffViewWrap={false} diffViewFontSize={13} /></div>
           : <p className="p-4 text-xs text-subtext0">{t('git.commitDetails.noTextChanges')}</p>)}
     </section>
   );

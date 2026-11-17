@@ -8,7 +8,7 @@ import {
   resolveScheduledChannel,
   targetReleaseTime,
   dueReleaseChannels,
-  nextReleaseVersion,
+  nextBuildVersion,
   scheduledReleasePlan,
   releaseChannel,
   waitForReleaseWindow,
@@ -73,7 +73,7 @@ export function prepareScheduledBranch({ schedule, now = new Date(), root = proc
     }
     if (!prepared) {
       git('checkout', '--detach', branch);
-      const version = nextReleaseVersion(ch, tags);
+      const version = nextBuildVersion(ch, tags);
       const tag = `v${version}`;
       // Use controller code loaded before checkout, never execute a script
       // supplied by the selected channel revision in the main cache scope.

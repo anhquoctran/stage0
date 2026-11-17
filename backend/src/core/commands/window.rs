@@ -106,19 +106,12 @@ pub async fn window_reset_size(window: Window) -> Result<(), String> {
             return Ok(());
         }
         let _ = window.unmaximize();
-        let (min_width, min_height) = minimum_window_size();
-        let min_size = tauri::LogicalSize {
-            width: min_width,
-            height: min_height,
-        };
-        let (width, height) = default_window_size();
-        window
-            .set_min_size(Some(tauri::Size::Logical(min_size)))
-            .map_err(|e| e.to_string())?;
-        window
-            .set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }))
-            .map_err(|e| e.to_string())?;
-        let _ = window.center();
+        crate::core::window_manager::display_geometry::configure_window(
+            &window,
+            default_window_size(),
+            minimum_window_size(),
+            true,
+        )?;
         Ok(())
     }
     .await;

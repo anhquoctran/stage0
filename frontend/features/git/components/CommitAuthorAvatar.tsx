@@ -54,6 +54,10 @@ export const CommitAuthorAvatar: React.FC<CommitAuthorAvatarProps> = ({ name, em
       {hasGravatar ? (
         <img
           src={gravatar.url}
+          srcSet={[1, 1.5, 2, 3, 4, 8].map(scale =>
+            `${gravatar.url.replace('s=80', `s=${Math.min(2048, Math.max(1, Math.ceil(size * scale)))}`)} ${scale}x`
+          ).join(', ')}
+          width={size} height={size}
           alt=""
           loading="lazy"
           referrerPolicy="no-referrer"

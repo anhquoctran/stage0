@@ -21,7 +21,7 @@ function fakeApi({ missing = false, allowed = true, existing = [] } = {}) {
 
 test('rules protect all channels without bypass and require reviewed, current, adjacent promotions on beta/main', () => {
   const [base, promotion] = releaseProtectionRules();
-  assert.equal(base.conditions.ref_name.include.length, 4);
+  assert.equal(base.conditions.ref_name.include.length, 3);
   assert.deepEqual(base.rules.find(rule => rule.type === 'pull_request').parameters.allowed_merge_methods, ['merge', 'squash', 'rebase']);
   const regressions = base.rules.find(rule => rule.type === 'required_status_checks').parameters;
   assert.equal(regressions.strict_required_status_checks_policy, true);
@@ -43,7 +43,7 @@ test('rules protect all channels without bypass and require reviewed, current, a
 test('dry run never writes and missing rollout/PR permissions fail before any server mutation', () => {
   const missing = fakeApi({ missing: true });
   const report = configureReleaseProtection({ api: missing.api });
-  assert.equal(report.ready, false); assert.equal(report.issues.length, (enforcementFiles.length + 1) * 4);
+  assert.equal(report.ready, false); assert.equal(report.issues.length, (enforcementFiles.length + 1) * 3);
   assert.equal(missing.writes.length, 0);
   assert.throws(() => configureReleaseProtection({ api: missing.api, apply: true }), /complete rollout/);
   assert.equal(missing.writes.length, 0);

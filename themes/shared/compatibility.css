@@ -1,0 +1,32 @@
+/* Legacy variables remain aliases for integrations during migration. */
+:root {
+  --brand: var(--theme-brand);
+  --ctp-base: var(--theme-base);
+  --ctp-blue: var(--theme-blue);
+  --ctp-brand: var(--theme-brand);
+  --ctp-crust: var(--theme-crust);
+  --ctp-flamingo: var(--theme-flamingo);
+  --ctp-green: var(--theme-green);
+  --ctp-lavender: var(--theme-lavender);
+  --ctp-mantle: var(--theme-mantle);
+  --ctp-maroon: var(--theme-maroon);
+  --ctp-mauve: var(--theme-mauve);
+  --ctp-on-accent: var(--theme-on-accent);
+  --ctp-overlay0: var(--theme-overlay0);
+  --ctp-overlay1: var(--theme-overlay1);
+  --ctp-overlay2: var(--theme-overlay2);
+  --ctp-peach: var(--theme-peach);
+  --ctp-pink: var(--theme-pink);
+  --ctp-red: var(--theme-red);
+  --ctp-rosewater: var(--theme-rosewater);
+  --ctp-sapphire: var(--theme-sapphire);
+  --ctp-sky: var(--theme-sky);
+  --ctp-subtext0: var(--theme-subtext0);
+  --ctp-subtext1: var(--theme-subtext1);
+  --ctp-surface0: var(--theme-surface0);
+  --ctp-surface1: var(--theme-surface1);
+  --ctp-surface2: var(--theme-surface2);
+  --ctp-teal: var(--theme-teal);
+  --ctp-text: var(--theme-text);
+  --ctp-yellow: var(--theme-yellow);
+}

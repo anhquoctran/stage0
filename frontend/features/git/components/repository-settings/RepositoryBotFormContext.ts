@@ -7,5 +7,5 @@ export interface RepositoryBotFormContext {
   inheritAgents: boolean;
   externalAgents: AcpAgentConfig[];
   showToast: (msg: string, level?: GitState['toastLevel']) => void;
-  addRepoCustomReviewer: (repoId: string, bot: Omit<BotReviewer, 'id'>) => string;
+  addRepoCustomReviewer: (repoId: string, bot: Omit<BotReviewer, 'id'>) => Promise<string>;
 }

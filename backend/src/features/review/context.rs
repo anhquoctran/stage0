@@ -4,6 +4,7 @@ mod diff;
 mod diff_batch;
 mod discussion_snippet;
 mod evidence;
+mod local_context;
 mod snapshot;
 mod tools;
 
@@ -23,13 +24,24 @@ pub struct ReviewContext {
     pub limited: bool,
     pub bytes: usize,
     pub max_bytes: usize,
+    /// Host lifecycle capability; absent from IPC and standalone evidence-only contexts.
+    pub(crate) feedback_enabled: bool,
     guards: Arc<GuardrailsEngine>,
     diff_offsets: HashMap<String, usize>,
     diff_cache: HashMap<String, Arc<diff::SnapshotDiff>>,
     diff_cache_bytes: usize,
+    local_cache: Option<super::local_context::CacheSession>,
+    delivered_context: BTreeSet<String>,
+    allow_context_references: bool,
 }
 
 impl ReviewContext {
+    pub(crate) fn external_output_budget(&self) -> usize {
+        (24 * 1024)
+            .min(self.max_bytes.saturating_sub(self.bytes))
+            .min(self.guards.get_policy().max_output_bytes)
+    }
+
     pub(crate) fn deliver_external(
         &mut self,
         name: &str,
@@ -58,9 +70,13 @@ impl ReviewContext {
             limited: false,
             bytes: 0,
             max_bytes: 128 * 1024,
+            feedback_enabled: false,
             diff_offsets: HashMap::new(),
             diff_cache: HashMap::new(),
             diff_cache_bytes: 0,
+            local_cache: None,
+            delivered_context: BTreeSet::new(),
+            allow_context_references: true,
         }
     }
 }
@@ -69,3 +85,6 @@ impl ReviewContext {
 mod encoding_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod local_context_tests;

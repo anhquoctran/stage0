@@ -42,3 +42,14 @@ test('formerly placeholder locales have localized welcome, preferences, menu, no
     }
   }
 });
+
+test('backend.review.tokenBudgetCannotContinue interpolates used, limit and inputEstimate across all 15 locales', async () => {
+  for (const code of ['ar', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'ko', 'pt-BR', 'pt-PT', 'ru', 'vi', 'zh-Hans', 'zh-Hant']) {
+    const i18n = await localized(code);
+    const rendered = i18n.t('backend.review.tokenBudgetCannotContinue', { used: 22056, limit: 64000, inputEstimate: 40526 });
+    assert.ok(rendered.includes('22056'), `${code}: ${rendered}`);
+    assert.ok(rendered.includes('64000'), `${code}: ${rendered}`);
+    assert.ok(rendered.includes('40526'), `${code}: ${rendered}`);
+    assert.ok(!/\{(?:used|limit|inputEstimate)\}/.test(rendered), `${code}: uninterpolated placeholder in ${rendered}`);
+  }
+});

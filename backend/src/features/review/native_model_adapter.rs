@@ -39,6 +39,18 @@ impl ReviewModelAdapter for NativeModelAdapter {
             2048
         }
     }
+    fn minimum_output_tokens(&self) -> u64 {
+        if self.config.provider == "deepseek"
+            && self.config.reasoning_effort.as_deref() != Some("none")
+        {
+            4096
+        } else {
+            0
+        }
+    }
+    fn input_token_usage(&self, response: &Value) -> Option<u64> {
+        super::provider::input_token_usage(&self.config.provider, response)
+    }
     fn truncated_output_usage(&self, response: &Value) -> Option<u64> {
         (self.config.provider == "deepseek" && response["choices"][0]["finish_reason"] == "length")
             .then(|| response["usage"]["total_tokens"].as_u64().unwrap_or(0))
